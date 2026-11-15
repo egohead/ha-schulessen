@@ -1,0 +1,21 @@
+{
+  "domain": "schulessen",
+  "name": "Schulessen",
+  "after_dependencies": [
+    "lovelace"
+  ],
+  "codeowners": [
+    "@egohead"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "frontend",
+    "http"
+  ],
+  "documentation": "https://github.com/egohead/ha-schulessen",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/egohead/ha-schulessen/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
