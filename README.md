@@ -46,7 +46,7 @@ Die Karte `custom:schulessen-card` kommt mit der Integration und wird automatisc
 
 | Hell | Dunkel |
 |---|---|
-| ![Karte hell](docs/karte-hell.png) | ![Karte dunkel](docs/karte-dunkel.png) |
+| ![Karte hell](docs/karte-light.png) | ![Karte dunkel](docs/karte-dark.png) |
 
 Kompakt für die Übersicht und auf dem Smartphone:
 
