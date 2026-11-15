@@ -5,14 +5,13 @@ import asyncio
 import logging
 from datetime import timedelta
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -20,7 +19,7 @@ from . import erinnerung
 from .api_rest import RestAuthError, RestClient
 from .api_wamp import WampAuthError, WampClient
 from .const import (
-    ALTE_DOMAINS, CONF_MANDANT, CONF_REALM, CONF_TYP, DOMAIN, TAGE_VORAUS, TYP_REST, TYP_WAMP, WOCHEN,
+    CONF_MANDANT, CONF_REALM, CONF_TYP, DOMAIN, TAGE_VORAUS, TYP_REST, TYP_WAMP, WOCHEN,
 )
 from .dashboard import async_dashboard_einrichten, async_karte_registrieren
 
@@ -70,20 +69,6 @@ class SpeiseplanCoordinator(DataUpdateCoordinator):
         self.stand = dt_util.now().isoformat()
         await self.store.async_save({"stand": self.stand, "data": data})
         return data
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Einträge der früheren Einzel-Integrationen übernehmen."""
-    vorhanden = {e.unique_id for e in hass.config_entries.async_entries(DOMAIN)}
-    for alt_domain, typ in ALTE_DOMAINS.items():
-        for alt in hass.config_entries.async_entries(alt_domain):
-            if alt.unique_id in vorhanden:
-                continue
-            hass.async_create_task(hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT},
-                data={"titel": alt.title, "unique_id": alt.unique_id, "entry_id": alt.entry_id,
-                      "data": {**alt.data, CONF_TYP: typ}, "options": dict(alt.options)}))
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -23,9 +23,6 @@ CONF_FERIENKALENDER = "ferienkalender"
 STANDARD_ZEIT = "17:00:00"
 STANDARD_TAGE = 3
 
-# frühere Einzel-Integrationen (Übernahme der Einträge)
-ALTE_DOMAINS = {"schulessen_wamp": TYP_WAMP, "schulessen_rest": TYP_REST}
-
 # Vorlagen für die Einrichtung
 VORLAGEN = {
     "dls_seb_leipzig": {

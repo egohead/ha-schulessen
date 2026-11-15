@@ -2,14 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Schulessen",
-        "description": "Entries from the earlier separate integrations were found. They can be taken over including credentials and settings.",
-        "menu_options": {
-          "uebernehmen": "Take over existing entries",
-          "vorlage": "Set up a new ordering portal"
-        }
-      },
-      "vorlage": {
         "title": "Choose ordering portal",
         "description": "For known portals the server and order page are filled in. Add each further child as a separate entry; each can use a different portal.",
         "data": {
@@ -49,8 +41,7 @@
     "abort": {
       "already_configured": "This account is already set up",
       "reauth_successful": "Signed in again",
-      "wrong_account": "These credentials belong to a different account",
-      "uebernommen": "Taken over: {namen}. The old entries were disabled and can be removed."
+      "wrong_account": "These credentials belong to a different account"
     }
   },
   "options": {

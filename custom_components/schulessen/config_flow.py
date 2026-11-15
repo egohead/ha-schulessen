@@ -4,7 +4,7 @@ import asyncio
 import logging
 
 import voluptuous as vol
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryDisabler, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -19,7 +19,7 @@ from .api_wamp import WampAuthError
 from .const import (
     CONF_BESTAETIGUNG, CONF_DASHBOARD, CONF_ERINNERUNG, CONF_ERINNERUNG_TAGE, CONF_ERINNERUNG_ZEIT,
     CONF_ERINNERUNG_ZIELE, CONF_FERIENKALENDER, CONF_MANDANT, CONF_NAME, CONF_PORTAL, CONF_REALM,
-    ALTE_DOMAINS, CONF_TYP, CONF_VORLAGE, DASHBOARD_ANGELEGT, DOMAIN, STANDARD_TAGE, STANDARD_ZEIT, TYP_REST, TYP_WAMP,
+    CONF_TYP, CONF_VORLAGE, DASHBOARD_ANGELEGT, DOMAIN, STANDARD_TAGE, STANDARD_ZEIT, TYP_REST, TYP_WAMP,
     VORLAGEN,
 )
 
@@ -50,40 +50,7 @@ class SpeiseplanFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         return SpeiseplanOptionen()
 
-    async def async_step_import(self, import_data: dict):
-        """Eintrag einer früheren Einzel-Integration übernehmen."""
-        await self.async_set_unique_id(import_data["unique_id"])
-        self._abort_if_unique_id_configured()
-        daten = {**import_data["data"], DASHBOARD_ANGELEGT: True}
-        if alt_id := import_data.get("entry_id"):
-            # alten Eintrag deaktivieren, damit Erinnerungen nicht doppelt kommen
-            await self.hass.config_entries.async_set_disabled_by(alt_id, ConfigEntryDisabler.USER)
-        return self.async_create_entry(title=import_data["titel"], data=daten,
-                                       options=import_data.get("options") or {})
-
-    def _alte_eintraege(self) -> list:
-        vorhanden = {e.unique_id for e in self.hass.config_entries.async_entries(DOMAIN)}
-        return [(alt, typ) for dom, typ in ALTE_DOMAINS.items()
-                for alt in self.hass.config_entries.async_entries(dom) if alt.unique_id not in vorhanden]
-
     async def async_step_user(self, user_input=None):
-        """Einstieg: frühere Einträge übernehmen oder neues Portal einrichten."""
-        if self._alte_eintraege():
-            return self.async_show_menu(step_id="user", menu_options=["uebernehmen", "vorlage"])
-        return await self.async_step_vorlage()
-
-    async def async_step_uebernehmen(self, user_input=None):
-        """Einträge der früheren Einzel-Integrationen samt Zugangsdaten übernehmen."""
-        namen = []
-        for alt, typ in self._alte_eintraege():
-            await self.hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT},
-                data={"titel": alt.title, "unique_id": alt.unique_id, "entry_id": alt.entry_id,
-                      "data": {**alt.data, CONF_TYP: typ}, "options": dict(alt.options)})
-            namen.append(alt.title)
-        return self.async_abort(reason="uebernommen", description_placeholders={"namen": ", ".join(namen)})
-
-    async def async_step_vorlage(self, user_input=None):
         """Schritt 1: Bestellportal wählen."""
         if user_input is not None:
             self._vorlage = dict(VORLAGEN[user_input[CONF_VORLAGE]])
@@ -91,7 +58,7 @@ class SpeiseplanFlow(ConfigFlow, domain=DOMAIN):
         optionen = [SelectOptionDict(value=k, label=v["titel"]) for k, v in VORLAGEN.items()]
         schema = vol.Schema({vol.Required(CONF_VORLAGE, default=next(iter(VORLAGEN))): SelectSelector(
             SelectSelectorConfig(options=optionen, mode=SelectSelectorMode.LIST))})
-        return self.async_show_form(step_id="vorlage", data_schema=schema)
+        return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_konto(self, user_input=None):
         """Schritt 2: Name des Kindes, Zugangsdaten, Portal-Angaben."""

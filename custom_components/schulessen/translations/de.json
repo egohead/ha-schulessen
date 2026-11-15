@@ -2,14 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Schulessen einrichten",
-        "description": "Es gibt Einträge der früheren Einzel-Integrationen. Sie können samt Zugangsdaten und Einstellungen übernommen werden.",
-        "menu_options": {
-          "uebernehmen": "Vorhandene Einträge übernehmen",
-          "vorlage": "Neues Bestellportal einrichten"
-        }
-      },
-      "vorlage": {
         "title": "Bestellportal wählen",
         "description": "Bei bekannten Portalen sind Server und Bestellseite schon ausgefüllt. Jedes weitere Kind wird als eigener Eintrag hinzugefügt und kann ein anderes Portal haben.",
         "data": {
@@ -49,8 +41,7 @@
     "abort": {
       "already_configured": "Dieses Konto ist schon eingerichtet",
       "reauth_successful": "Erneut angemeldet",
-      "wrong_account": "Die Zugangsdaten gehören zu einem anderen Konto",
-      "uebernommen": "Übernommen: {namen}. Die alten Einträge wurden deaktiviert und können entfernt werden."
+      "wrong_account": "Die Zugangsdaten gehören zu einem anderen Konto"
     }
   },
   "options": {

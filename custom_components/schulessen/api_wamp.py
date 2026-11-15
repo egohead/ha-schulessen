@@ -6,7 +6,7 @@ import hashlib
 import hmac
 import itertools
 import json
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 import logging
 
