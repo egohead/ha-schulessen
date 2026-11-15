@@ -48,9 +48,9 @@ Die Karte `custom:schulessen-card` kommt mit der Integration und wird automatisc
 |---|---|
 | ![Karte hell](docs/karte-hell.png) | ![Karte dunkel](docs/karte-dunkel.png) |
 
-| Kompakt | Smartphone |
-|---|---|
-| ![Kompakte Karte](docs/karte-kompakt.png) | ![Karte auf dem Smartphone](docs/karte-mobil.png) |
+Kompakt für die Übersicht und auf dem Smartphone:
+
+![Kompakte Karte und Smartphone-Ansicht](docs/karte-kompakt-mobil.png)
 
 Die Screenshots zeigen Beispieldaten.
 
