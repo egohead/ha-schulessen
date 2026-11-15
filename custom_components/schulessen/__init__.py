@@ -84,7 +84,8 @@ class SpeiseplanCoordinator(DataUpdateCoordinator):
         except Exception as err:  # noqa: BLE001
             alt = await self.store.async_load()
             if alt:
-                _LOGGER.warning("Speiseplan nicht erreichbar, nutze Zwischenspeicher: %s", err)
+                _LOGGER.warning("Speiseplan nicht erreichbar, nutze Zwischenspeicher: %s", repr(err))
+                _LOGGER.debug("Fehler beim Abruf", exc_info=True)
                 self.live = False
                 self.stand = alt.get("stand")
                 return self.markieren(alt["data"])

@@ -68,3 +68,30 @@ async def test_kein_essen_noetig(hass, speiseplan):
                                    blocking=True)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.anna_essen_morgen").state == "nicht bestellt"
+
+
+async def test_rest_neu_anmelden_nach_abgelaufener_sitzung():
+    from datetime import date
+    from unittest.mock import AsyncMock, MagicMock
+
+    from custom_components.schulessen.api_rest import RestClient
+
+    c = RestClient(MagicMock(), "https://x.example", "m", "u", "p")
+    c.token = "alt"
+    c.kunde = {"bestellerId": 1}
+    aufrufe = []
+
+    async def post(path, body, timeout=30):
+        aufrufe.append(path)
+        if path == "/relogin":
+            raise TimeoutError
+        if path == "/login":
+            c.token = "neu"
+            return {"content": {"bestellerId": 1}}
+        if c.token != "neu":
+            raise TimeoutError
+        return {"content": {}}
+
+    c._post = AsyncMock(side_effect=post)
+    daten = await c.fetch(date(2026, 11, 16), date(2026, 11, 20))
+    assert "/login" in aufrufe and daten["tage"] == {}

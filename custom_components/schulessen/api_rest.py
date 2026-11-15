@@ -43,9 +43,9 @@ class RestClient:
         self.token: str | None = None
         self.kunde: dict = {}
 
-    async def _post(self, path: str, body: dict) -> dict:
+    async def _post(self, path: str, body: dict, timeout: float = 30) -> dict:
         async with self._s.post(self._url + path, json=body,
-                                timeout=aiohttp.ClientTimeout(total=30)) as r:
+                                timeout=aiohttp.ClientTimeout(total=timeout)) as r:
             if r.status in (401, 403):
                 raise RestAuthError(f"HTTP {r.status}")
             if r.status >= 400:
@@ -76,13 +76,14 @@ class RestClient:
             try:
                 data = await self._post("/relogin", {
                     "token": self.token, "client": "web",
-                    "parameter": {"mandantId": self._mandant}})
+                    "parameter": {"mandantId": self._mandant}}, timeout=10)
                 c = data.get("content")
                 if isinstance(c, dict) and c.get("bestellerId"):
                     self.kunde = c
                     return
-            except (RestAuthError, RestApiError, aiohttp.ClientError):
+            except (RestAuthError, RestApiError, aiohttp.ClientError, TimeoutError):
                 pass
+            self.token = None
         await self.login()
 
     async def _call(self, command: str, von: date, bis: date) -> dict:
@@ -98,9 +99,16 @@ class RestClient:
         return c
 
     async def fetch(self, von: date, bis: date) -> dict:
-        await self.ensure_session()
-        plan = await self._call("speiseplan/kundeAPI_1_5", von, bis)
-        best = await self._call("bestellungen/getAPI_1_5", von, bis)
+        try:
+            await self.ensure_session()
+            plan = await self._call("speiseplan/kundeAPI_1_5", von, bis)
+            best = await self._call("bestellungen/getAPI_1_5", von, bis)
+        except (RestApiError, aiohttp.ClientError, TimeoutError):
+            # Sitzung kann beim Anbieter ungültig werden (z. B. nach Anmeldung in der App): neu anmelden
+            self.token = None
+            await self.login()
+            plan = await self._call("speiseplan/kundeAPI_1_5", von, bis)
+            best = await self._call("bestellungen/getAPI_1_5", von, bis)
         texte = plan.get("menuetexte") or {}
         tage_plan = {}
         for k in (plan.get("kunden") or {}).values():
