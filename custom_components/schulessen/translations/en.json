@@ -48,7 +48,7 @@
     "step": {
       "init": {
         "title": "Settings",
-        "description": "The reminder checks daily at the set time whether a school day in the period has no order, and only then sends a notification. Days with entries in the holiday calendar are skipped.",
+        "description": "The daily reminder checks at the set time whether a school day in the period has no order, and only then sends a notification. Days with entries in the holiday calendar are skipped. Optionally it can also remind shortly before each order deadline.",
         "data": {
           "portal_url": "Order page (for the order button)",
           "dashboard": "Use the \"Schulessen\" dashboard",
@@ -57,11 +57,13 @@
           "erinnerung_zeit": "Reminder time",
           "erinnerung_tage": "Period (days ahead)",
           "erinnerung_ziele": "Recipients (notify services)",
-          "ferienkalender": "Holiday calendar (optional)"
+          "ferienkalender": "Holiday calendar (optional)",
+          "erinnerung_vorlauf": "Also remind before the order deadline (hours, 0 = off)"
         },
         "data_description": {
           "erinnerung_tage": "1 = tomorrow only, 7 = one week, at most 21. Also used for the hint on the card.",
-          "erinnerung_ziele": "e.g. notify.mobile_app_iphone, several allowed"
+          "erinnerung_ziele": "e.g. notify.mobile_app_iphone, several allowed",
+          "erinnerung_vorlauf": "e.g. 3: if an open day's order deadline is less than 3 hours away, a separate notification is sent. Once per day."
         }
       }
     },

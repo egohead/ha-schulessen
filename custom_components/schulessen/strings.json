@@ -48,7 +48,7 @@
     "step": {
       "init": {
         "title": "Einstellungen",
-        "description": "Die Erinnerung prüft täglich zur eingestellten Uhrzeit, ob im Zeitraum ein Schultag ohne Bestellung liegt, und meldet sich nur dann. Tage mit Einträgen im Ferienkalender zählen nicht.",
+        "description": "Die tägliche Erinnerung prüft zur eingestellten Uhrzeit, ob im Zeitraum ein Schultag ohne Bestellung liegt, und meldet sich nur dann. Tage mit Einträgen im Ferienkalender zählen nicht. Zusätzlich kann kurz vor jedem Bestellschluss erinnert werden.",
         "data": {
           "portal_url": "Bestellseite (für den Bestellen-Knopf)",
           "dashboard": "Dashboard „Schulessen“ verwenden",
@@ -57,11 +57,13 @@
           "erinnerung_zeit": "Uhrzeit der Erinnerung",
           "erinnerung_tage": "Zeitraum (Tage voraus)",
           "erinnerung_ziele": "Empfänger (Benachrichtigungsdienste)",
-          "ferienkalender": "Ferienkalender (optional)"
+          "ferienkalender": "Ferienkalender (optional)",
+          "erinnerung_vorlauf": "Zusätzlich vor Bestellschluss erinnern (Stunden, 0 = aus)"
         },
         "data_description": {
           "erinnerung_tage": "1 = nur morgen, 7 = eine Woche, höchstens 21. Gilt auch für den Hinweis auf der Karte.",
-          "erinnerung_ziele": "z. B. notify.mobile_app_iphone, mehrere möglich"
+          "erinnerung_ziele": "z. B. notify.mobile_app_iphone, mehrere möglich",
+          "erinnerung_vorlauf": "z. B. 3: Liegt der Bestellschluss eines offenen Tages in weniger als 3 Stunden, kommt eine eigene Nachricht. Pro Tag nur einmal."
         }
       }
     },

@@ -18,7 +18,7 @@ from .api_rest import RestAuthError
 from .api_wamp import WampAuthError
 from .const import (
     CONF_BESTAETIGUNG, CONF_DASHBOARD, CONF_ERINNERUNG, CONF_ERINNERUNG_TAGE, CONF_ERINNERUNG_ZEIT,
-    CONF_ERINNERUNG_ZIELE, CONF_FERIENKALENDER, CONF_MANDANT, CONF_NAME, CONF_PORTAL, CONF_REALM,
+    CONF_ERINNERUNG_ZIELE, CONF_FERIENKALENDER, CONF_VORLAUF, CONF_MANDANT, CONF_NAME, CONF_PORTAL, CONF_REALM,
     CONF_TYP, CONF_VORLAGE, DASHBOARD_ANGELEGT, DOMAIN, STANDARD_TAGE, STANDARD_ZEIT, TYP_REST, TYP_WAMP,
     VORLAGEN,
 )
@@ -148,6 +148,7 @@ class SpeiseplanOptionen(OptionsFlow):
                 daten = {k: v for k, v in user_input.items() if k != "dashboard_neu"}
                 daten[CONF_PORTAL] = portal
                 daten[CONF_ERINNERUNG_TAGE] = int(daten.get(CONF_ERINNERUNG_TAGE) or STANDARD_TAGE)
+                daten[CONF_VORLAUF] = int(daten.get(CONF_VORLAUF) or 0)
                 return self.async_create_entry(data=daten)
 
         def akt(key, default=None):
@@ -164,6 +165,8 @@ class SpeiseplanOptionen(OptionsFlow):
             vol.Required(CONF_ERINNERUNG_ZEIT): TimeSelector(),
             vol.Required(CONF_ERINNERUNG_TAGE): NumberSelector(NumberSelectorConfig(
                 min=1, max=21, step=1, mode=NumberSelectorMode.BOX, unit_of_measurement="Tage")),
+            vol.Required(CONF_VORLAUF): NumberSelector(NumberSelectorConfig(
+                min=0, max=48, step=1, mode=NumberSelectorMode.BOX, unit_of_measurement="Std.")),
             vol.Optional(CONF_ERINNERUNG_ZIELE): SelectSelector(SelectSelectorConfig(
                 options=ziel_optionen, multiple=True, mode=SelectSelectorMode.DROPDOWN, custom_value=True)),
             vol.Optional(CONF_FERIENKALENDER): EntitySelector(EntitySelectorConfig(domain="calendar")),
@@ -174,6 +177,7 @@ class SpeiseplanOptionen(OptionsFlow):
             CONF_ERINNERUNG: bool(akt(CONF_ERINNERUNG, False)),
             CONF_ERINNERUNG_ZEIT: akt(CONF_ERINNERUNG_ZEIT, STANDARD_ZEIT),
             CONF_ERINNERUNG_TAGE: akt(CONF_ERINNERUNG_TAGE, STANDARD_TAGE),
+            CONF_VORLAUF: akt(CONF_VORLAUF, 0),
             CONF_ERINNERUNG_ZIELE: akt(CONF_ERINNERUNG_ZIELE) or [],
             CONF_FERIENKALENDER: akt(CONF_FERIENKALENDER),
         }

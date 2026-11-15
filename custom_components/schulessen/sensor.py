@@ -6,13 +6,13 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_ERINNERUNG, CONF_PORTAL
-from .erinnerung import option, zeitraum
+from .erinnerung import offene_tage_sync, option, schluss_zeit, zeitraum
 from .entity import SpeiseplanEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     c = entry.runtime_data
-    async_add_entities([EssenTag(c, 0), EssenTag(c, 1), NaechstesEssen(c), Stand(c)])
+    async_add_entities([EssenTag(c, 0), EssenTag(c, 1), NaechstesEssen(c), Stand(c), Bestellschluss(c)])
 
 
 def _status(tag):
@@ -155,3 +155,28 @@ class Stand(SpeiseplanEntity, SensorEntity):
             "erinnerung": bool(option(e, CONF_ERINNERUNG, False)),
             "tage": _tage_liste(c),
         }
+
+
+class Bestellschluss(SpeiseplanEntity, SensorEntity):
+    """Nächster Bestellschluss eines Tages ohne Bestellung."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:timer-sand"
+    _bezeichnung = "Nächster Bestellschluss"
+
+    def __init__(self, c) -> None:
+        super().__init__(c, "bestellschluss")
+
+    def _naechster(self):
+        for d, t in offene_tage_sync((self.coordinator.data or {}).get("tage")):
+            if (s := schluss_zeit(t)) is not None:
+                return d, s
+        return None, None
+
+    @property
+    def native_value(self):
+        return self._naechster()[1]
+
+    @property
+    def extra_state_attributes(self):
+        return {"datum": self._naechster()[0]}

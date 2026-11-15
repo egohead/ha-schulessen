@@ -3,9 +3,60 @@
   const TAG = "schulessen-card";
   if (customElements.get(TAG)) return;
 
-  const WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-  const WT_LANG = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-  const MON = ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sep.", "Okt.", "Nov.", "Dez."];
+  const L = {
+    de: {
+      wt: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+      wtLang: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+      mon: ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sep.", "Okt.", "Nov.", "Dez."],
+      kurz: (wt, d, m) => `${wt} ${d}.${m}.`,
+      lang: (wt, d, mon) => `${wt}, ${d}. ${mon}`,
+      uhr: (hm) => `${hm} Uhr`,
+      locale: "de-DE",
+      status: { ok: "Bestellt", offen: "Nicht bestellt", pause: "Abbestellt", frei: "Feiertag", leer: "Kein Speiseplan" },
+      heute: "Heute", morgen: "Morgen", naechster: "Nächster Schultag", demnaechst: "Demnächst",
+      keinPlan: "Noch kein Speiseplan", keinPlanKurz: "Kein Plan", keineVersorgung: "Für diesen Tag ist keine Versorgung vorgesehen.",
+      nichtsBestellt: "Noch nichts bestellt", angebote: (n) => `${n} ${n === 1 ? "Angebot" : "Angebote"} zur Auswahl`,
+      kennzeichnung: "Kennzeichnung", bestellschluss: "Bestellschluss", abgelaufen: "abgelaufen",
+      nochMin: (n) => `noch ${n} Min.`, nochStd: (n) => `noch ${n} Std.`, nochTage: (n) => `noch ${n} Tage`,
+      allesBestellt: (sp) => (sp === 1 ? "Morgen ist alles bestellt" : sp ? `In den nächsten ${sp} Tagen ist alles bestellt` : "Alle kommenden Schultage sind bestellt"),
+      ohne: (n, sp) => `${n} ${n === 1 ? "Schultag" : "Schultage"} ohne Bestellung${sp ? (sp === 1 ? " (morgen)" : ` (nächste ${sp} Tage)`) : ""}`,
+      weitere: (n) => ` und ${n} weitere`,
+      bestellen: "Bestellen", portal: "Bestellportal öffnen", kw: "KW",
+      dieseWoche: "Diese Woche", kommendeWoche: "Kommende Woche", naechsteWoche: "Nächste Woche", inWochen: (n) => `in ${n} Wochen`,
+      tipp: "Tag antippen für alle Angebote", keineAngebote: "Keine Angebote", bestellt: "bestellt",
+      stand: "Stand", cache: "Zwischenspeicher", aktualisieren: "Jetzt aktualisieren",
+      vorWoche: "Vorherige Woche", nachWoche: "Nächste Woche", fehlt: (e) => `Entität ${e} nicht gefunden`,
+    },
+    en: {
+      wt: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      wtLang: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      mon: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      kurz: (wt, d, m) => `${wt} ${d}/${m}`,
+      lang: (wt, d, mon) => `${wt}, ${d} ${mon}`,
+      uhr: (hm) => hm,
+      locale: "en-GB",
+      status: { ok: "Ordered", offen: "Not ordered", pause: "Cancelled", frei: "Holiday", leer: "No menu" },
+      heute: "Today", morgen: "Tomorrow", naechster: "Next school day", demnaechst: "Coming up",
+      keinPlan: "No menu yet", keinPlanKurz: "No menu", keineVersorgung: "No meals are planned for this day.",
+      nichtsBestellt: "Nothing ordered yet", angebote: (n) => `${n} ${n === 1 ? "option" : "options"} available`,
+      kennzeichnung: "Labels", bestellschluss: "Order by", abgelaufen: "passed",
+      nochMin: (n) => `${n} min left`, nochStd: (n) => `${n} h left`, nochTage: (n) => `${n} days left`,
+      allesBestellt: (sp) => (sp === 1 ? "Tomorrow is ordered" : sp ? `Everything ordered for the next ${sp} days` : "All upcoming school days are ordered"),
+      ohne: (n, sp) => `${n} school ${n === 1 ? "day" : "days"} without an order${sp ? (sp === 1 ? " (tomorrow)" : ` (next ${sp} days)`) : ""}`,
+      weitere: (n) => ` and ${n} more`,
+      bestellen: "Order", portal: "Open order portal", kw: "Week",
+      dieseWoche: "This week", kommendeWoche: "Coming week", naechsteWoche: "Next week", inWochen: (n) => `in ${n} weeks`,
+      tipp: "Tap a day for all options", keineAngebote: "No options", bestellt: "ordered",
+      stand: "Updated", cache: "Cached", aktualisieren: "Refresh now",
+      vorWoche: "Previous week", nachWoche: "Next week", fehlt: (e) => `Entity ${e} not found`,
+    },
+  };
+  let S = L.de;
+  const sprache = (hass) => {
+    const l = (hass && (hass.locale?.language || hass.language)) || "de";
+    S = l.toLowerCase().startsWith("de") ? L.de : L.en;
+    return S;
+  };
 
   const esc = (s) =>
     String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -17,11 +68,11 @@
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const kurzDatum = (iso) => {
     const d = parseDay(iso);
-    return `${WT[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`;
+    return S.kurz(S.wt[d.getDay()], d.getDate(), d.getMonth() + 1);
   };
   const langDatum = (iso) => {
     const d = parseDay(iso);
-    return `${WT_LANG[d.getDay()]}, ${d.getDate()}. ${MON[d.getMonth()]}`;
+    return S.lang(S.wtLang[d.getDay()], d.getDate(), S.mon[d.getMonth()]);
   };
   const montag = (d) => {
     const m = new Date(d);
@@ -39,7 +90,7 @@
   const preis = (p) => {
     if (p === null || p === undefined || p === "") return "";
     const n = Number(p);
-    return Number.isFinite(n) ? n.toLocaleString("de-DE", { style: "currency", currency: "EUR" }) : esc(p);
+    return Number.isFinite(n) ? n.toLocaleString(S.locale, { style: "currency", currency: "EUR" }) : esc(p);
   };
   const parseZeit = (v) => {
     if (!v) return null;
@@ -51,17 +102,17 @@
   };
   const restZeit = (ziel) => {
     const ms = ziel - new Date();
-    if (ms <= 0) return "abgelaufen";
+    if (ms <= 0) return S.abgelaufen;
     const min = Math.round(ms / 60000);
-    if (min < 60) return `noch ${min} Min.`;
+    if (min < 60) return S.nochMin(min);
     const h = Math.floor(min / 60);
-    if (h < 48) return `noch ${h} Std.`;
-    return `noch ${Math.floor(h / 24)} Tage`;
+    if (h < 48) return S.nochStd(h);
+    return S.nochTage(Math.floor(h / 24));
   };
   const zeitText = (ziel) =>
-    `${WT[ziel.getDay()]} ${ziel.getDate()}.${ziel.getMonth() + 1}., ${String(ziel.getHours()).padStart(2, "0")}:${String(
-      ziel.getMinutes()
-    ).padStart(2, "0")} Uhr`;
+    `${S.kurz(S.wt[ziel.getDay()], ziel.getDate(), ziel.getMonth() + 1)}, ${S.uhr(
+      `${String(ziel.getHours()).padStart(2, "0")}:${String(ziel.getMinutes()).padStart(2, "0")}`
+    )}`;
 
   const art = (tag) => {
     if (!tag) return "leer";
@@ -71,7 +122,6 @@
     if (tag.menues.some((m) => m.bestellt)) return "ok";
     return "offen";
   };
-  const STATUS = { ok: "Bestellt", offen: "Nicht bestellt", pause: "Abbestellt", frei: "Feiertag", leer: "Kein Speiseplan", vorbei: "" };
   const punkt = (k) => `<i class="dot ${k}" aria-hidden="true"></i>`;
 
   class SchulessenCard extends HTMLElement {
@@ -83,6 +133,10 @@
       this._sig = "";
     }
 
+    static getConfigElement() {
+      return document.createElement("schulessen-card-editor");
+    }
+
     static getStubConfig(hass) {
       const e = Object.keys(hass.states).find((k) => hass.states[k].attributes.schulessen_karte);
       return { entity: e || "", variante: "voll" };
@@ -92,12 +146,25 @@
       if (!config.entity) throw new Error("entity fehlt: Stand-Sensor der Schulessen-Integration angeben");
       this._config = { variante: "voll", ...config };
       this._sig = "";
-      if (this._hass) this._render();
+      if (this._hass) {
+        this._eid = this._stand(this._hass);
+        this._render();
+      }
+    }
+
+    _stand(hass) {
+      const id = this._config?.entity;
+      const st = hass.states[id];
+      if (!st || st.attributes.schulessen_karte) return id;
+      const dev = hass.entities?.[id]?.device_id;
+      if (!dev) return id;
+      return Object.keys(hass.entities).find((k) => hass.entities[k].device_id === dev && hass.states[k]?.attributes.schulessen_karte) || id;
     }
 
     set hass(hass) {
       this._hass = hass;
-      const st = hass.states[this._config?.entity];
+      this._eid = this._stand(hass);
+      const st = hass.states[this._eid];
       const sig = st ? `${st.last_updated}|${st.state}` : "none";
       if (sig !== this._sig) {
         this._sig = sig;
@@ -114,12 +181,12 @@
     }
 
     _tage() {
-      const st = this._hass.states[this._config.entity];
+      const st = this._hass.states[this._eid || this._config.entity];
       return (st && st.attributes.tage) || [];
     }
 
     _aktualisieren() {
-      this._hass.callService("homeassistant", "update_entity", { entity_id: this._config.entity });
+      this._hass.callService("homeassistant", "update_entity", { entity_id: this._eid || this._config.entity });
       const b = this.shadowRoot.querySelector(".refresh");
       if (b) {
         b.classList.add("dreht");
@@ -129,9 +196,10 @@
 
     _render() {
       if (!this._hass || !this._config) return;
-      const st = this._hass.states[this._config.entity];
+      sprache(this._hass);
+      const st = this._hass.states[this._eid || this._config.entity];
       if (!st) {
-        this.shadowRoot.innerHTML = `<ha-card><div class="leerhinweis">Entität ${esc(this._config.entity)} nicht gefunden</div></ha-card>`;
+        this.shadowRoot.innerHTML = `<style>${CSS}</style><ha-card><div class="leerhinweis">${S.fehlt(esc(this._config.entity))}</div></ha-card>`;
         return;
       }
       const a = st.attributes;
@@ -141,12 +209,12 @@
       const jetzt = new Date();
       const nachAusgabe = jetzt.getHours() >= 14;
       let hero = tagHeute && art(tagHeute) !== "leer" && art(tagHeute) !== "frei" && !nachAusgabe ? tagHeute : null;
-      let heroLabel = "Heute";
+      let heroLabel = S.heute;
       if (!hero) {
         hero = tage.find((t) => t.datum > heute && art(t) !== "leer" && art(t) !== "frei") || null;
         const morgen = new Date();
         morgen.setDate(morgen.getDate() + 1);
-        heroLabel = hero && hero.datum === isoDay(morgen) ? "Morgen" : "Nächster Schultag";
+        heroLabel = hero && hero.datum === isoDay(morgen) ? S.morgen : S.naechster;
       }
       const grenze = new Date();
       grenze.setDate(grenze.getDate() + (Number(a.hinweis_tage) > 0 ? Number(a.hinweis_tage) : 21));
@@ -167,19 +235,19 @@
               ${a.einrichtung ? `<div class="einrichtung">${esc(a.einrichtung)}</div>` : ""}
             </div>
             <div class="aktionen">
-              <span class="stand" title="${stand ? "Stand " + stand.toLocaleString("de-DE") : ""}">
-                ${punkt(live ? "live" : "cache")}${live ? "Stand" : "Zwischenspeicher"}${
+              <span class="stand" title="${stand ? S.stand + " " + stand.toLocaleString(S.locale) : ""}">
+                ${punkt(live ? "live" : "cache")}${live ? S.stand : S.cache}${
         stand ? ` ${String(stand.getHours()).padStart(2, "0")}:${String(stand.getMinutes()).padStart(2, "0")}` : ""
       }
               </span>
-              <button class="refresh" title="Jetzt aktualisieren" aria-label="Aktualisieren"><ha-icon icon="mdi:refresh"></ha-icon></button>
+              <button class="refresh" title="${S.aktualisieren}" aria-label="${S.aktualisieren}"><ha-icon icon="mdi:refresh"></ha-icon></button>
             </div>
           </header>
           ${this._heroHtml(hero, heroLabel)}
           ${this._offenHtml(offen, a.portal, kompakt)}
           ${kompakt ? "" : this._wocheHtml(tage, heute)}
           ${kompakt ? "" : this._detailHtml(tage)}
-          ${!kompakt && a.portal ? `<footer><a class="link" href="${esc(a.portal)}" target="_blank" rel="noopener">Bestellportal öffnen<ha-icon icon="mdi:arrow-top-right"></ha-icon></a></footer>` : ""}
+          ${!kompakt && a.portal ? `<footer><a class="link" href="${esc(a.portal)}" target="_blank" rel="noopener">${S.portal}<ha-icon icon="mdi:arrow-top-right"></ha-icon></a></footer>` : ""}
         </ha-card>`;
 
       this.shadowRoot.querySelector(".refresh")?.addEventListener("click", () => this._aktualisieren());
@@ -200,24 +268,24 @@
 
     _heroHtml(tag, label) {
       if (!tag) {
-        return `<section class="hero leer"><div class="label">Demnächst</div><div class="gericht">Noch kein Speiseplan</div></section>`;
+        return `<section class="hero leer"><div class="label">${S.demnaechst}</div><div class="gericht">${S.keinPlan}</div></section>`;
       }
       const k = art(tag);
-      const stText = STATUS[k];
+      const stText = S.status[k];
       const b = (tag.menues || []).find((m) => m.bestellt);
       const schluss = parseZeit(tag.bestellschluss);
       let gericht, text, chips = "", rechts = "";
       if (k === "ok") {
         gericht = esc(b.kurz || b.name);
         text = b.kurz && b.text ? esc(b.text) : b.text && b.text !== b.name ? esc(b.text) : "";
-        chips = [esc(b.name)].concat(b.kennzeichnung ? [`Kennzeichnung ${esc(b.kennzeichnung)}`] : []).join(" · ");
+        chips = [esc(b.name)].concat(b.kennzeichnung ? [`${S.kennzeichnung} ${esc(b.kennzeichnung)}`] : []).join(" · ");
         rechts = b.preis !== null && b.preis !== undefined ? `<div class="preis">${preis(b.preis)}</div>` : "";
       } else if (k === "pause") {
-        gericht = "Abbestellt";
-        text = tag.pause_grund ? esc(tag.pause_grund) : "Für diesen Tag ist keine Versorgung vorgesehen.";
+        gericht = S.status.pause;
+        text = tag.pause_grund ? esc(tag.pause_grund) : S.keineVersorgung;
       } else {
-        gericht = "Noch nichts bestellt";
-        text = `${(tag.menues || []).length} Angebote zur Auswahl`;
+        gericht = S.nichtsBestellt;
+        text = S.angebote((tag.menues || []).length);
       }
       return `
         <section class="hero ${k}">
@@ -232,23 +300,22 @@
           </div>
           <div class="fuss">
             <span class="status ${k}">${punkt(k)}${stText}</span>
-            ${schluss && k === "offen" ? `<span class="frist">Bestellschluss ${zeitText(schluss)}, ${restZeit(schluss)}</span>` : ""}
+            ${schluss && k === "offen" ? `<span class="frist">${S.bestellschluss} ${zeitText(schluss)}, ${restZeit(schluss)}</span>` : ""}
           </div>
         </section>`;
     }
 
     _offenHtml(offen, portal, kompakt) {
       if (!offen.length) {
-        const sp = this._spanne === 1 ? "Morgen ist" : this._spanne ? `In den nächsten ${this._spanne} Tagen ist` : "Alle kommenden Schultage sind";
-        return kompakt ? "" : `<div class="hinweis gut">${punkt("ok")}${this._spanne ? sp + " alles bestellt" : sp + " bestellt"}</div>`;
+        return kompakt ? "" : `<div class="hinweis gut">${punkt("ok")}${S.allesBestellt(this._spanne)}</div>`;
       }
       const liste = offen.slice(0, kompakt ? 3 : 8).map((t) => kurzDatum(t.datum)).join(", ");
-      const mehr = offen.length > (kompakt ? 3 : 8) ? ` und ${offen.length - (kompakt ? 3 : 8)} weitere` : "";
+      const mehr = offen.length > (kompakt ? 3 : 8) ? S.weitere(offen.length - (kompakt ? 3 : 8)) : "";
       return `
         <div class="hinweis warn">
           ${punkt("offen")}
-          <div class="hinweistext"><strong>${offen.length} ${offen.length === 1 ? "Schultag" : "Schultage"} ohne Bestellung${this._spanne ? (this._spanne === 1 ? " (morgen)" : ` (nächste ${this._spanne} Tage)`) : ""}</strong><span>${liste}${mehr}</span></div>
-          ${portal ? `<a class="knopf" href="${esc(portal)}" target="_blank" rel="noopener">Bestellen</a>` : ""}
+          <div class="hinweistext"><strong>${S.ohne(offen.length, this._spanne)}</strong><span>${liste}${mehr}</span></div>
+          ${portal ? `<a class="knopf" href="${esc(portal)}" target="_blank" rel="noopener">${S.bestellen}</a>` : ""}
         </div>`;
     }
 
@@ -267,10 +334,10 @@
         const k = iso < heute ? "vorbei" : art(t);
         const b = t && (t.menues || []).find((m) => m.bestellt);
         const inhalt =
-          k === "ok" ? esc(b.kurz || b.name) : k === "pause" ? "Abbestellt" : k === "frei" ? "Feiertag" : k === "offen" ? "Nicht bestellt" : k === "vorbei" ? "" : "Kein Plan";
+          k === "ok" ? esc(b.kurz || b.name) : k === "vorbei" ? "" : k === "leer" ? S.keinPlanKurz : S.status[k];
         zellen.push(`
           <button class="tag ${k} ${iso === heute ? "heute" : ""} ${this._auswahl === iso ? "aktiv" : ""}" data-tag="${iso}" ${t ? "" : "disabled"}>
-            <span class="tkopf"><span class="wt">${WT[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.</span>${k === "vorbei" ? "" : punkt(k)}</span>
+            <span class="tkopf"><span class="wt">${S.kurz(S.wt[d.getDay()], d.getDate(), d.getMonth() + 1)}</span>${k === "vorbei" ? "" : punkt(k)}</span>
             <span class="was">${inhalt}</span>
             ${b && b.name && (b.kurz || "") !== b.name ? `<span class="linie">${esc(b.name)}</span>` : ""}
           </button>`);
@@ -278,22 +345,22 @@
       return `
         <section class="woche">
           <div class="wochenkopf">
-            <button class="nav" data-woche="-1" ${this._woche === 0 ? "disabled" : ""} aria-label="Vorherige Woche"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
-            <div class="kw">KW ${kw(start)}<span>${this._woche === 0 ? (wochenende ? "Kommende Woche" : "Diese Woche") : this._woche === 1 && !wochenende ? "Nächste Woche" : `in ${this._woche + (wochenende ? 1 : 0)} Wochen`}</span></div>
-            <button class="nav" data-woche="1" ${this._woche >= (wochenende ? 2 : 3) ? "disabled" : ""} aria-label="Nächste Woche"><ha-icon icon="mdi:chevron-right"></ha-icon></button>
+            <button class="nav" data-woche="-1" ${this._woche === 0 ? "disabled" : ""} aria-label="${S.vorWoche}"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
+            <div class="kw">${S.kw} ${kw(start)}<span>${this._woche === 0 ? (wochenende ? S.kommendeWoche : S.dieseWoche) : this._woche === 1 && !wochenende ? S.naechsteWoche : S.inWochen(this._woche + (wochenende ? 1 : 0))}</span></div>
+            <button class="nav" data-woche="1" ${this._woche >= (wochenende ? 2 : 3) ? "disabled" : ""} aria-label="${S.nachWoche}"><ha-icon icon="mdi:chevron-right"></ha-icon></button>
           </div>
           <div class="tage">${zellen.join("")}</div>
         </section>`;
     }
 
     _detailHtml(tage) {
-      if (!this._auswahl) return `<div class="tipp">Tag antippen für alle Angebote</div>`;
+      if (!this._auswahl) return `<div class="tipp">${S.tipp}</div>`;
       const t = tage.find((x) => x.datum === this._auswahl);
       if (!t) return "";
       const k = art(t);
       if (k === "pause" || k === "frei") {
         return `<section class="detail"><div class="detailkopf">${langDatum(t.datum)}</div><div class="leise">${
-          k === "frei" ? "Feiertag" : esc(t.pause_grund || "Abbestellt")
+          k === "frei" ? S.status.frei : esc(t.pause_grund || S.status.pause)
         }</div></section>`;
       }
       const schluss = parseZeit(t.bestellschluss);
@@ -303,20 +370,20 @@
           <div class="menue ${m.bestellt ? "gewaehlt" : ""}">
             <div class="mkopf">
               <span class="mname">${esc(m.name)}</span>
-              ${m.bestellt ? `<span class="haken">${punkt("ok")}bestellt</span>` : ""}
+              ${m.bestellt ? `<span class="haken">${punkt("ok")}${S.bestellt}</span>` : ""}
               <span class="mpreis">${preis(m.preis)}</span>
             </div>
             <div class="mtext">${esc(m.kurz && m.text ? m.text : m.text || m.kurz || "")}</div>
-            ${m.kennzeichnung ? `<div class="mkenn">Kennzeichnung ${esc(m.kennzeichnung)}</div>` : ""}
+            ${m.kennzeichnung ? `<div class="mkenn">${S.kennzeichnung} ${esc(m.kennzeichnung)}</div>` : ""}
           </div>`
         )
         .join("");
       return `
         <section class="detail">
           <div class="detailkopf">${langDatum(t.datum)}${
-        schluss ? `<span class="leise">Bestellschluss ${zeitText(schluss)}${schluss > new Date() ? ", " + restZeit(schluss) : ""}</span>` : ""
+        schluss ? `<span class="leise">${S.bestellschluss} ${zeitText(schluss)}${schluss > new Date() ? ", " + restZeit(schluss) : ""}</span>` : ""
       }</div>
-          ${menues || `<div class="leise">Keine Angebote</div>`}
+          ${menues || `<div class="leise">${S.keineAngebote}</div>`}
         </section>`;
     }
   }
@@ -428,14 +495,54 @@
     }
   `;
 
+  class SchulessenCardEditor extends HTMLElement {
+    setConfig(config) {
+      this._config = { ...config };
+      this._aufbauen();
+    }
+
+    set hass(hass) {
+      this._hass = hass;
+      this._aufbauen();
+    }
+
+    _aufbauen() {
+      if (!this._hass || !this._config) return;
+      const en = sprache(this._hass) === L.en;
+      if (!this._form) {
+        this._form = document.createElement("ha-form");
+        this._form.computeLabel = (f) =>
+          ({ entity: en ? "Child (status sensor)" : "Kind (Stand-Sensor)", variante: en ? "Layout" : "Darstellung", titel: en ? "Title (optional)" : "Titel (optional)" })[f.name];
+        this._form.addEventListener("value-changed", (ev) => {
+          this._config = { ...this._config, ...ev.detail.value };
+          Object.keys(this._config).forEach((k) => (this._config[k] === "" || this._config[k] === undefined) && delete this._config[k]);
+          this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: this._config }, bubbles: true, composed: true }));
+        });
+        this.appendChild(this._form);
+      }
+      this._form.hass = this._hass;
+      this._form.schema = [
+        { name: "entity", required: true, selector: { entity: { integration: "schulessen", domain: "sensor" } } },
+        { name: "variante", selector: { select: { mode: "dropdown", options: [
+          { value: "voll", label: en ? "Full (with week)" : "Voll (mit Woche)" },
+          { value: "kompakt", label: en ? "Compact" : "Kompakt" },
+        ] } } },
+        { name: "titel", selector: { text: {} } },
+      ];
+      this._form.data = { variante: "voll", ...this._config };
+    }
+  }
+
   customElements.define(TAG, SchulessenCard);
+  if (!customElements.get("schulessen-card-editor")) customElements.define("schulessen-card-editor", SchulessenCardEditor);
   window.customCards = window.customCards || [];
   if (!window.customCards.some((c) => c.type === TAG)) {
     window.customCards.push({
       type: TAG,
       name: "Schulessen",
       description: "Speiseplan, Bestellstatus und Wochenübersicht",
-      preview: false,
+      preview: true,
+      documentationURL: "https://github.com/egohead/ha-schulessen",
     });
   }
 })();

@@ -9,8 +9,9 @@ Zeigt den Speiseplan und den Bestellstatus aus dem Bestellportal der Schule in H
 Pro Kind:
 
 - Sensoren `Essen heute`, `Essen morgen`, `Essen nächster Schultag` und `Essen Stand`
+- einen Sensor `Nächster Bestellschluss` (Zeitstempel) und einen Binärsensor `Essen offen`, der an ist, solange im Erinnerungszeitraum ein Schultag ohne Bestellung liegt
 - einen Kalender `Speiseplan` mit bestelltem Essen und allen Angeboten
-- eine Bestell-Erinnerung per Benachrichtigung
+- eine Bestell-Erinnerung per Benachrichtigung, täglich und auf Wunsch kurz vor Bestellschluss
 - eine Karte für das Dashboard, auf Wunsch auch ein eigenes Dashboard „Schulessen“
 
 Das Portal wird stündlich abgefragt. Ist es nicht erreichbar, bleiben die zuletzt geladenen Daten stehen. Ändert sich das Passwort, fragt Home Assistant nach dem neuen.
@@ -42,7 +43,7 @@ Für ein zweites Kind die Integration einfach noch einmal hinzufügen. Die Entit
 
 ## Karte und Dashboard
 
-Die Karte `custom:schulessen-card` kommt mit der Integration und wird automatisch geladen. Sie zeigt das Essen für heute oder den nächsten Schultag, den Bestellschluss mit Restzeit, alle Tage ohne Bestellung samt Knopf zur Bestellseite und eine Wochenübersicht. Ein Tipp auf einen Tag zeigt alle Angebote.
+Die Karte `custom:schulessen-card` kommt mit der Integration und wird automatisch geladen. Sie steht in der Kartenauswahl unter „Schulessen“ und lässt sich dort ohne YAML einstellen; Texte erscheinen je nach Spracheinstellung auf Deutsch oder Englisch. Sie zeigt das Essen für heute oder den nächsten Schultag, den Bestellschluss mit Restzeit, alle Tage ohne Bestellung samt Knopf zur Bestellseite und eine Wochenübersicht. Ein Tipp auf einen Tag zeigt alle Angebote.
 
 | Hell | Dunkel |
 |---|---|
@@ -72,8 +73,15 @@ Die Erinnerung wird unter Einstellungen → Geräte & Dienste → Schulessen →
 | Zeitraum | wie viele Tage im Voraus (1 = nur morgen, bis 21); gilt auch für den Hinweis auf der Karte |
 | Empfänger | ein oder mehrere `notify`-Dienste |
 | Ferienkalender | optional; Tage mit Einträgen in diesem Kalender werden übersprungen |
+| Vor Bestellschluss | optional, in Stunden; z. B. 3 = eine eigene Nachricht, wenn der Bestellschluss eines offenen Tages weniger als 3 Stunden entfernt ist |
 
-Eine Nachricht kommt nur, wenn im Zeitraum ein Schultag ohne Bestellung liegt und der Bestellschluss noch nicht vorbei ist. Mit der Schaltfläche „Essen-Erinnerung senden“ lässt sich das ausprobieren.
+Die tägliche Nachricht kommt nur, wenn im Zeitraum ein Schultag ohne Bestellung liegt und der Bestellschluss noch nicht vorbei ist. Die Nachricht vor Bestellschluss kommt pro Tag höchstens einmal. Mit der Schaltfläche „Essen-Erinnerung senden“ lässt sich das ausprobieren.
+
+Wer lieber eigene Automationen baut, nimmt `binary_sensor.<kind>_essen_offen` oder `sensor.<kind>_nachster_bestellschluss` als Auslöser.
+
+## Fehler melden
+
+Unter Einstellungen → Geräte & Dienste → Schulessen → ⋮ → Diagnose herunterladen gibt es eine Datei, in der Zugangsdaten und Empfänger geschwärzt sind. Die bitte an ein Issue anhängen.
 
 ## Lizenz
 

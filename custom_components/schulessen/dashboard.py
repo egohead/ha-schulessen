@@ -15,7 +15,7 @@ from .const import CONF_DASHBOARD, DASHBOARD_ANGELEGT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 KARTE = "schulessen-card.js"
-KARTE_VERSION = "1.3.0"
+KARTE_VERSION = "1.4.0"
 DASHBOARD_URL = "schulessen"
 
 
