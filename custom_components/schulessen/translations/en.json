@@ -2,81 +2,81 @@
   "config": {
     "step": {
       "user": {
-        "title": "Schulessen einrichten",
-        "description": "Es gibt Einträge der früheren Einzel-Integrationen. Sie können samt Zugangsdaten und Einstellungen übernommen werden.",
+        "title": "Set up Schulessen",
+        "description": "Entries from the earlier separate integrations were found. They can be taken over including credentials and settings.",
         "menu_options": {
-          "uebernehmen": "Vorhandene Einträge übernehmen",
-          "vorlage": "Neues Bestellportal einrichten"
+          "uebernehmen": "Take over existing entries",
+          "vorlage": "Set up a new ordering portal"
         }
       },
       "vorlage": {
-        "title": "Bestellportal wählen",
-        "description": "Für bekannte Portale werden Server-Angaben und Portal-Link vorausgefüllt. Für weitere Kinder die Integration erneut hinzufügen – jedes Kind kann ein anderes Portal haben.",
+        "title": "Choose ordering portal",
+        "description": "For known portals the server and order page are filled in. Add each further child as a separate entry; each can use a different portal.",
         "data": {
-          "vorlage": "Bestellportal"
+          "vorlage": "Ordering portal"
         }
       },
       "konto": {
-        "title": "Schulessen verbinden – {portal}",
-        "description": "Name des Kindes und Zugangsdaten des eigenen Bestellkontos.\n\nInoffizielle Integration ohne Verbindung zum Anbieter. Nutzung ausschließlich auf eigene Verantwortung. Nutzungsbedingungen: {bedingungen}",
+        "title": "{portal}",
+        "description": "Child's name and the credentials of your own ordering account.\n\nUnofficial integration, not made by the provider. Use at your own responsibility, see terms of use: {bedingungen}",
         "data": {
-          "name": "Name (Kind)",
-          "username": "Benutzername / Kundennummer",
-          "password": "Passwort",
+          "name": "Name (child)",
+          "username": "Username / customer number",
+          "password": "Password",
           "realm": "Realm",
-          "mandant": "Mandant",
+          "mandant": "Tenant",
           "url": "Server",
-          "portal_url": "Link zum Bestellportal (optional, für den Bestellen-Knopf)",
-          "dashboard": "Eigenes Dashboard „Schulessen“ mit Speiseplan-Karten anlegen",
-          "bestaetigung": "Ich stimme den Nutzungsbedingungen zu, habe die AGB meines Anbieters selbst geprüft und trage die Verantwortung für die Nutzung allein."
+          "portal_url": "Order page (optional, for the order button)",
+          "dashboard": "Create a \"Schulessen\" dashboard",
+          "bestaetigung": "I accept the terms of use, have checked my provider's terms myself and use the integration at my own responsibility."
         }
       },
       "reauth_confirm": {
-        "title": "Neu anmelden",
+        "title": "Sign in again",
         "data": {
-          "password": "Passwort"
+          "password": "Password"
         }
       }
     },
     "error": {
-      "invalid_auth": "Login fehlgeschlagen",
-      "cannot_connect": "Server nicht erreichbar",
-      "bestaetigung_fehlt": "Bitte die Bestätigung setzen, um fortzufahren.",
-      "portal_unsicher": "Der Link zum Bestellportal muss mit https:// beginnen.",
-      "insecure_url_wamp": "Die Server-Adresse muss mit wss:// beginnen.",
-      "insecure_url_rest": "Die Server-Adresse muss mit https:// beginnen."
+      "invalid_auth": "Login failed",
+      "cannot_connect": "Server not reachable",
+      "bestaetigung_fehlt": "Please tick the confirmation to continue.",
+      "portal_unsicher": "The order page link must start with https://.",
+      "insecure_url_wamp": "The server address must start with wss://.",
+      "insecure_url_rest": "The server address must start with https://."
     },
     "abort": {
-      "already_configured": "Dieses Konto ist schon eingerichtet",
-      "reauth_successful": "Erneut angemeldet",
-      "wrong_account": "Die Zugangsdaten gehören zu einem anderen Konto",
-      "uebernommen": "Übernommen: {namen}. Die alten Einträge wurden deaktiviert und können entfernt werden."
+      "already_configured": "This account is already set up",
+      "reauth_successful": "Signed in again",
+      "wrong_account": "These credentials belong to a different account",
+      "uebernommen": "Taken over: {namen}. The old entries were disabled and can be removed."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Schulessen – Einstellungen",
-        "description": "Erinnerung: Zur eingestellten Uhrzeit wird täglich geprüft, ob im Zeitraum Schultage ohne Bestellung liegen (Tage mit Terminen im Ferienkalender werden übersprungen). Nur dann wird benachrichtigt.",
+        "title": "Settings",
+        "description": "The reminder checks daily at the set time whether a school day in the period has no order, and only then sends a notification. Days with entries in the holiday calendar are skipped.",
         "data": {
-          "portal_url": "Link zum Bestellportal (für den Bestellen-Knopf)",
-          "dashboard": "Dashboard „Schulessen“ verwenden",
-          "dashboard_neu": "Ansicht für dieses Kind im Dashboard neu anlegen",
-          "erinnerung": "Bestell-Erinnerung senden",
-          "erinnerung_zeit": "Uhrzeit der Erinnerung",
-          "erinnerung_tage": "Zeitraum (Tage voraus)",
-          "erinnerung_ziele": "Empfänger (Benachrichtigungsdienste)",
-          "ferienkalender": "Ferienkalender (optional)"
+          "portal_url": "Order page (for the order button)",
+          "dashboard": "Use the \"Schulessen\" dashboard",
+          "dashboard_neu": "Recreate this child's view in the dashboard",
+          "erinnerung": "Send order reminder",
+          "erinnerung_zeit": "Reminder time",
+          "erinnerung_tage": "Period (days ahead)",
+          "erinnerung_ziele": "Recipients (notify services)",
+          "ferienkalender": "Holiday calendar (optional)"
         },
         "data_description": {
-          "erinnerung_tage": "1 = nur morgen, 3 = die nächsten drei Tage, 7 = eine Woche usw. Gilt auch für den Hinweis in der Karte.",
-          "erinnerung_ziele": "z. B. notify.mobile_app_iphone – Mehrfachauswahl möglich."
+          "erinnerung_tage": "1 = tomorrow only, 7 = one week, at most 21. Also used for the hint on the card.",
+          "erinnerung_ziele": "e.g. notify.mobile_app_iphone, several allowed"
         }
       }
     },
     "error": {
-      "portal_unsicher": "Der Link zum Bestellportal muss mit https:// beginnen.",
-      "ziele_fehlen": "Für die Erinnerung mindestens einen Empfänger wählen."
+      "portal_unsicher": "The order page link must start with https://.",
+      "ziele_fehlen": "Choose at least one recipient for the reminder."
     }
   }
 }

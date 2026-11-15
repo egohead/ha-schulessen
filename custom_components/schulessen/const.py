@@ -23,13 +23,13 @@ CONF_FERIENKALENDER = "ferienkalender"
 STANDARD_ZEIT = "17:00:00"
 STANDARD_TAGE = 3
 
-# Alte Einzel-Integrationen, deren Einträge beim Start übernommen werden
+# frühere Einzel-Integrationen (Übernahme der Einträge)
 ALTE_DOMAINS = {"schulessen_wamp": TYP_WAMP, "schulessen_rest": TYP_REST}
 
-# Bekannte Bestellportale als Vorlage für die Einrichtung (nur Beschreibung der Kompatibilität)
+# Vorlagen für die Einrichtung
 VORLAGEN = {
     "dls_seb_leipzig": {
-        "titel": "DLS „Guten APPetit!“ – SEB Schulessen Leipzig",
+        "titel": "DLS „Guten APPetit!“ (SEB Schulessen Leipzig)",
         CONF_TYP: TYP_WAMP,
         CONF_REALM: "biz.dls",
         "url": "wss://connectanum.dls-gmbh.biz/wamp",

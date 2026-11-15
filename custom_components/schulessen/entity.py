@@ -5,7 +5,7 @@ from .const import DOMAIN
 
 
 class SpeiseplanEntity(CoordinatorEntity):
-    """Basis: Gerät = Kind, Entität = Bezeichnung, damit die Entitäts-IDs kurz bleiben (z. B. sensor.anna_essen_heute)."""
+    """Gerät = Kind, Entität = Bezeichnung -> sensor.anna_essen_heute."""
 
     _attr_has_entity_name = True
     _bezeichnung = ""

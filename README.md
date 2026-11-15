@@ -1,106 +1,80 @@
 # Schulessen für Home Assistant
 
-> **Wichtig – Nutzung auf eigene Verantwortung**
->
-> Inoffizielles, unentgeltliches Privatprojekt ohne Verbindung zu Bestellportalen, Caterern oder Schulträgern. Ob die Nutzung mit dem Vertrag, den AGB und den Nutzungsbedingungen des eigenen Anbieters vereinbar ist, prüft und entscheidet **jede Nutzerin und jeder Nutzer selbst**. Die Verantwortung für Einsatz und Folgen liegt allein beim Nutzer. Es gelten die [Nutzungsbedingungen und der Haftungsausschluss](NUTZUNGSBEDINGUNGEN.md); ihnen wird bei der Einrichtung ausdrücklich zugestimmt.
+Zeigt den Speiseplan und den Bestellstatus aus dem Bestellportal der Schule in Home Assistant an und erinnert, wenn für die nächsten Tage noch nichts bestellt ist. Jedes Kind wird einzeln eingerichtet und kann ein anderes Portal haben. Die Integration liest nur das eigene Konto und bestellt nichts.
 
-Eine Integration für Schulessen-Bestellportale: Speiseplan, Bestellstatus, Bestellschluss und Erinnerungen – **pro Kind ein eigenes Portal**, ausgewählt aus Vorlagen. Liest nur das **eigene** Konto; es wird nichts bestellt.
+> Inoffizielles Privatprojekt, nicht verbunden mit Caterern, Portalbetreibern oder Schulträgern. Ob die Nutzung mit den AGB des eigenen Anbieters vereinbar ist, muss jeder selbst prüfen; die Verantwortung liegt beim Nutzer. Details in den [Nutzungsbedingungen](NUTZUNGSBEDINGUNGEN.md), denen bei der Einrichtung zugestimmt wird.
 
-## Funktionen
+## Was man bekommt
 
-- **Mehrere Kinder, verschiedene Anbieter**: Jedes Kind wird einzeln eingerichtet und kann ein anderes Bestellportal haben.
-- **Vorlagen** für bekannte Portale – Server-Angaben und Portal-Link werden automatisch eingetragen.
-- **Sensoren** pro Kind: `Essen heute`, `Essen morgen`, `Essen nächster Schultag` (mit Liste der Tage ohne Bestellung), `Essen Stand`
-- **Kalender** `Speiseplan` mit dem bestellten Essen und allen Angeboten
-- **Bestell-Erinnerung** mit einstellbarer Uhrzeit, Zeitraum, Empfängern und Ferienkalender
-- **Eigene Karte und optionales Dashboard** „Schulessen“
-- Stündliche Abfrage mit **Zwischenspeicher**: Ist das Portal nicht erreichbar, bleiben die zuletzt geladenen Daten erhalten
-- Re-Auth bei geändertem Passwort; nur lesend
+Pro Kind:
 
-## Unterstützte Bestellportale
+- Sensoren `Essen heute`, `Essen morgen`, `Essen nächster Schultag` und `Essen Stand`
+- einen Kalender `Speiseplan` mit bestelltem Essen und allen Angeboten
+- eine Bestell-Erinnerung per Benachrichtigung
+- eine Karte für das Dashboard, auf Wunsch auch ein eigenes Dashboard „Schulessen“
 
-Getestet. Diese Angaben stehen bei der Einrichtung als **Vorlage** zur Auswahl:
+Das Portal wird stündlich abgefragt. Ist es nicht erreichbar, bleiben die zuletzt geladenen Daten stehen. Ändert sich das Passwort, fragt Home Assistant nach dem neuen.
 
-| Anbieter / Portal | Schnittstelle | Server | Realm / Mandant | Link zum Bestellportal |
+## Unterstützte Portale
+
+Getestet sind diese beiden; bei der Einrichtung stehen sie als Vorlage zur Auswahl:
+
+| Portal | Schnittstelle | Server | Realm / Mandant | Bestellseite |
 |---|---|---|---|---|
-| DLS „Guten APPetit!“ – SEB Schulessen Leipzig | WAMP | `wss://connectanum.dls-gmbh.biz/wamp` | Realm `biz.dls` | `https://seb.dls-gmbh.biz/mein-essen` |
+| DLS „Guten APPetit!“ (SEB Schulessen Leipzig) | WAMP | `wss://connectanum.dls-gmbh.biz/wamp` | Realm `biz.dls` | `https://seb.dls-gmbh.biz/mein-essen` |
 | GFB Catering Leipzig | REST | `https://proxy.mms-rcs.de` | Mandant `108106-gfb-leipzig` | `https://bestellung-gfb-catering.de` |
 
-Weitere Portale derselben Plattformen lassen sich über „Anderes Portal mit WAMP-/REST-Schnittstelle“ mit eigenen Angaben einrichten (z. B. andere DLS-Standorte oder Caterer mit „RCS-MMS Mobiler MenüService“; die Mandanten-ID steht in `assets/enviroment.config.json` des Webportals). Ungetestete Portale gern als Issue melden – mit Server-Angaben, ohne Zugangsdaten.
+Andere Portale auf denselben Plattformen (weitere DLS-Standorte, Caterer mit „RCS-MMS Mobiler MenüService“) lassen sich mit eigenen Angaben einrichten. Die Mandanten-ID steht in `assets/enviroment.config.json` des jeweiligen Webportals. Wenn ein weiteres Portal funktioniert oder nicht, freue ich mich über ein Issue mit den Server-Angaben (ohne Zugangsdaten).
 
-Die genannten Namen sind Marken bzw. Unternehmenskennzeichen ihrer jeweiligen Inhaber und dienen hier nur der Beschreibung der Kompatibilität.
+Die genannten Namen sind Marken ihrer Inhaber und stehen hier nur, um die Kompatibilität zu beschreiben.
 
 ## Installation
 
-1. Home Assistant → Marketplace (bzw. HACS) → **Über Link hinzufügen** / *Benutzerdefinierte Repositories*: `https://github.com/egohead/ha-schulessen`, Typ **Integration**
-2. „Schulessen“ installieren und Home Assistant neu starten
-3. Einstellungen → Geräte & Dienste → Integration hinzufügen → „Schulessen“
+1. In Home Assistant unter Marketplace (oder HACS) das Repository `https://github.com/egohead/ha-schulessen` als Integration hinzufügen.
+2. „Schulessen“ installieren und Home Assistant neu starten.
+3. Unter Einstellungen → Geräte & Dienste die Integration „Schulessen“ hinzufügen.
 
 ## Einrichtung
 
-1. **Bestellportal wählen** – Vorlage oder „Anderes Portal …“
-2. **Kind und Zugangsdaten** – Name des Kindes, Benutzername/Kundennummer, Passwort; Server-Angaben sind bei Vorlagen vorausgefüllt
-3. Optional: Link zum Bestellportal, Dashboard anlegen
-4. Zustimmung zu den Nutzungsbedingungen (Pflicht)
+Zuerst das Portal wählen, dann den Namen des Kindes und die Zugangsdaten eingeben. Bei den Vorlagen sind die Server-Angaben schon ausgefüllt. Optional lassen sich der Link zur Bestellseite und das Dashboard festlegen.
 
-Für ein weiteres Kind die Integration erneut hinzufügen. Die Entitäten heißen nach dem Kind, z. B. `sensor.anna_essen_heute`.
+Für ein zweites Kind die Integration einfach noch einmal hinzufügen. Die Entitäten heißen nach dem Kind, also z. B. `sensor.anna_essen_heute`.
 
-### Umstieg von den früheren Einzel-Integrationen
+## Karte und Dashboard
 
-Wer bisher „Schulessen (WAMP-Bestellportal)“ oder „Schulessen (REST-Bestellportal)“ nutzt: Nach der Installation von „Schulessen“ und einem Neustart werden die vorhandenen Einträge samt Zugangsdaten und Einstellungen automatisch übernommen. Danach die alten Integrationen entfernen.
-
-## Dashboard und Karte
-
-Bei der Einrichtung kann optional ein eigenes Dashboard **„Schulessen“** angelegt werden. Es enthält:
-
-- eine **Übersicht** mit einer kompakten Karte pro Kind (mehrere Kinder),
-- pro Kind eine **eigene Ansicht** mit der vollständigen Karte und einem Kalender.
-
-Die Karte `custom:schulessen-card` wird mit der Integration ausgeliefert und automatisch geladen – keine zusätzliche Installation nötig. Sie zeigt:
-
-- das bestellte Essen für heute bzw. den nächsten Schultag mit Beschreibung, Menülinie, Kennzeichnung und Preis,
-- den Bestellstatus und den Bestellschluss mit Restzeit,
-- einen Hinweis auf alle Schultage ohne Bestellung, mit Knopf zum Bestellportal,
-- eine Wochenübersicht (diese und die folgenden Wochen); ein Tag antippen zeigt alle Angebote,
-- Live-/Zwischenspeicher-Status und eine Schaltfläche zum sofortigen Aktualisieren.
+Die Karte `custom:schulessen-card` kommt mit der Integration und wird automatisch geladen. Sie zeigt das Essen für heute oder den nächsten Schultag, den Bestellschluss mit Restzeit, alle Tage ohne Bestellung samt Knopf zur Bestellseite und eine Wochenübersicht. Ein Tipp auf einen Tag zeigt alle Angebote.
 
 | Hell | Dunkel |
 |---|---|
 | ![Karte hell](docs/karte-hell.png) | ![Karte dunkel](docs/karte-dunkel.png) |
 
-| Kompakt (Übersicht) | Smartphone |
+| Kompakt | Smartphone |
 |---|---|
 | ![Kompakte Karte](docs/karte-kompakt.png) | ![Karte auf dem Smartphone](docs/karte-mobil.png) |
 
-*Beispieldaten.*
+Die Screenshots zeigen Beispieldaten.
 
-Die Karte lässt sich auch in jedes andere Dashboard einfügen:
+Wer das Dashboard „Schulessen“ anlegen lässt, bekommt eine Übersicht mit einer kompakten Karte pro Kind und für jedes Kind eine eigene Seite mit Karte und Kalender. In andere Dashboards lässt sich die Karte so einbauen:
 
 ```yaml
 type: custom:schulessen-card
-entity: sensor.anna_essen_stand   # Stand-Sensor der Integration
-variante: voll                    # oder: kompakt
+entity: sensor.anna_essen_stand
+variante: voll   # oder kompakt
 ```
 
-Dashboard und Bestellportal-Link lassen sich später unter *Einstellungen → Geräte & Dienste → Integration → Konfigurieren* ändern; dort kann die Ansicht auch neu angelegt werden.
+## Erinnerung
 
-## Bestell-Erinnerung
-
-Unter *Einstellungen → Geräte & Dienste → Integration → Konfigurieren* lässt sich eine Erinnerung einschalten:
+Die Erinnerung wird unter Einstellungen → Geräte & Dienste → Schulessen → Konfigurieren eingeschaltet:
 
 | Einstellung | Bedeutung |
 |---|---|
 | Uhrzeit | wann täglich geprüft wird, z. B. 17:00 |
-| Zeitraum | wie viele Tage voraus geprüft wird: 1 = morgen, 3, 7, 14 … (gilt auch für den Hinweis in der Karte) |
-| Empfänger | ein oder mehrere Benachrichtigungsdienste, z. B. `notify.mobile_app_iphone` |
-| Ferienkalender | optional; Tage mit Terminen in diesem Kalender werden übersprungen |
+| Zeitraum | wie viele Tage im Voraus (1 = nur morgen, bis 21); gilt auch für den Hinweis auf der Karte |
+| Empfänger | ein oder mehrere `notify`-Dienste |
+| Ferienkalender | optional; Tage mit Einträgen in diesem Kalender werden übersprungen |
 
-Benachrichtigt wird nur, wenn im Zeitraum Schultage ohne Bestellung liegen, deren Bestellschluss noch nicht vorbei ist. Die Nachricht enthält einen Knopf zum Bestellportal. Mit der Schaltfläche **„Essen-Erinnerung senden“** lässt sich das testen.
-
-## Rechtliche Hinweise
-
-Siehe [Nutzungsbedingungen und Haftungsausschluss](NUTZUNGSBEDINGUNGEN.md). Es werden keine Logos oder Inhalte Dritter mitgeliefert.
+Eine Nachricht kommt nur, wenn im Zeitraum ein Schultag ohne Bestellung liegt und der Bestellschluss noch nicht vorbei ist. Mit der Schaltfläche „Essen-Erinnerung senden“ lässt sich das ausprobieren.
 
 ## Lizenz
 
-MIT, siehe [LICENSE](LICENSE). Ergänzend gelten die [Nutzungsbedingungen](NUTZUNGSBEDINGUNGEN.md).
+MIT, siehe [LICENSE](LICENSE). Zusätzlich gelten die [Nutzungsbedingungen](NUTZUNGSBEDINGUNGEN.md).

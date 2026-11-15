@@ -73,7 +73,7 @@ class SpeiseplanCoordinator(DataUpdateCoordinator):
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Einträge der früheren Einzel-Integrationen übernehmen (einmalig, ohne erneuten Login)."""
+    """Einträge der früheren Einzel-Integrationen übernehmen."""
     vorhanden = {e.unique_id for e in hass.config_entries.async_entries(DOMAIN)}
     for alt_domain, typ in ALTE_DOMAINS.items():
         for alt in hass.config_entries.async_entries(alt_domain):

@@ -11,14 +11,14 @@
       },
       "vorlage": {
         "title": "Bestellportal wählen",
-        "description": "Für bekannte Portale werden Server-Angaben und Portal-Link vorausgefüllt. Für weitere Kinder die Integration erneut hinzufügen – jedes Kind kann ein anderes Portal haben.",
+        "description": "Bei bekannten Portalen sind Server und Bestellseite schon ausgefüllt. Jedes weitere Kind wird als eigener Eintrag hinzugefügt und kann ein anderes Portal haben.",
         "data": {
           "vorlage": "Bestellportal"
         }
       },
       "konto": {
-        "title": "Schulessen verbinden – {portal}",
-        "description": "Name des Kindes und Zugangsdaten des eigenen Bestellkontos.\n\nInoffizielle Integration ohne Verbindung zum Anbieter. Nutzung ausschließlich auf eigene Verantwortung. Nutzungsbedingungen: {bedingungen}",
+        "title": "{portal}",
+        "description": "Name des Kindes und Zugangsdaten des eigenen Bestellkontos.\n\nInoffizielle Integration, nicht vom Anbieter. Nutzung auf eigene Verantwortung, siehe Nutzungsbedingungen: {bedingungen}",
         "data": {
           "name": "Name (Kind)",
           "username": "Benutzername / Kundennummer",
@@ -26,9 +26,9 @@
           "realm": "Realm",
           "mandant": "Mandant",
           "url": "Server",
-          "portal_url": "Link zum Bestellportal (optional, für den Bestellen-Knopf)",
-          "dashboard": "Eigenes Dashboard „Schulessen“ mit Speiseplan-Karten anlegen",
-          "bestaetigung": "Ich stimme den Nutzungsbedingungen zu, habe die AGB meines Anbieters selbst geprüft und trage die Verantwortung für die Nutzung allein."
+          "portal_url": "Bestellseite (optional, für den Bestellen-Knopf)",
+          "dashboard": "Dashboard „Schulessen“ anlegen",
+          "bestaetigung": "Ich stimme den Nutzungsbedingungen zu, habe die AGB meines Anbieters selbst geprüft und nutze die Integration auf eigene Verantwortung."
         }
       },
       "reauth_confirm": {
@@ -56,10 +56,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Schulessen – Einstellungen",
-        "description": "Erinnerung: Zur eingestellten Uhrzeit wird täglich geprüft, ob im Zeitraum Schultage ohne Bestellung liegen (Tage mit Terminen im Ferienkalender werden übersprungen). Nur dann wird benachrichtigt.",
+        "title": "Einstellungen",
+        "description": "Die Erinnerung prüft täglich zur eingestellten Uhrzeit, ob im Zeitraum ein Schultag ohne Bestellung liegt, und meldet sich nur dann. Tage mit Einträgen im Ferienkalender zählen nicht.",
         "data": {
-          "portal_url": "Link zum Bestellportal (für den Bestellen-Knopf)",
+          "portal_url": "Bestellseite (für den Bestellen-Knopf)",
           "dashboard": "Dashboard „Schulessen“ verwenden",
           "dashboard_neu": "Ansicht für dieses Kind im Dashboard neu anlegen",
           "erinnerung": "Bestell-Erinnerung senden",
@@ -69,8 +69,8 @@
           "ferienkalender": "Ferienkalender (optional)"
         },
         "data_description": {
-          "erinnerung_tage": "1 = nur morgen, 3 = die nächsten drei Tage, 7 = eine Woche usw. Gilt auch für den Hinweis in der Karte.",
-          "erinnerung_ziele": "z. B. notify.mobile_app_iphone – Mehrfachauswahl möglich."
+          "erinnerung_tage": "1 = nur morgen, 7 = eine Woche, höchstens 21. Gilt auch für den Hinweis auf der Karte.",
+          "erinnerung_ziele": "z. B. notify.mobile_app_iphone, mehrere möglich"
         }
       }
     },
