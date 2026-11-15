@@ -11,6 +11,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_APP_LINK,
     CONF_ERINNERUNG,
     CONF_ERINNERUNG_TAGE,
     CONF_ERINNERUNG_ZEIT,
@@ -139,7 +140,7 @@ async def senden(hass: HomeAssistant, entry: ConfigEntry, *, auch_wenn_leer: boo
     offen = await offene_tage(hass, entry)
     if not offen and not auch_wenn_leer:
         return False
-    portal = option(entry, CONF_PORTAL)
+    portal = ziel_link(entry)
     n = zeitraum(entry)
     spanne = "morgen" if n == 1 else f"in den nächsten {n} Tagen"
     if offen:
@@ -159,6 +160,11 @@ async def senden(hass: HomeAssistant, entry: ConfigEntry, *, auch_wenn_leer: boo
 def _ziele(entry: ConfigEntry) -> list[str]:
     ziele = option(entry, CONF_ERINNERUNG_ZIELE) or []
     return [ziele] if isinstance(ziele, str) else list(ziele)
+
+
+def ziel_link(entry: ConfigEntry) -> str | None:
+    """App-Link hat Vorrang vor dem Bestellportal."""
+    return (option(entry, CONF_APP_LINK) or "").strip() or option(entry, CONF_PORTAL)
 
 
 async def _benachrichtigen(hass: HomeAssistant, ziele: list[str], titel: str, text: str, portal: str | None) -> None:
@@ -194,7 +200,7 @@ async def frist_pruefen(hass: HomeAssistant, entry: ConfigEntry, store: Store, g
         await _benachrichtigen(
             hass, ziele, f"Zu tun: Essen bestellen – {entry.title}",
             f"Für {_kurz(d)} ist noch nichts bestellt. Bestellschluss {tag} {s:%H:%M} Uhr, noch {noch}",
-            option(entry, CONF_PORTAL))
+            ziel_link(entry))
         gesendet.add(d)
         neu.append(d)
     if neu:

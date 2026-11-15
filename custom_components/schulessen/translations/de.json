@@ -58,12 +58,14 @@
           "erinnerung_tage": "Zeitraum (Tage voraus)",
           "erinnerung_ziele": "Empfänger (Benachrichtigungsdienste)",
           "ferienkalender": "Ferienkalender (optional)",
-          "erinnerung_vorlauf": "Zusätzlich vor Bestellschluss erinnern (Stunden, 0 = aus)"
+          "erinnerung_vorlauf": "Zusätzlich vor Bestellschluss erinnern (Stunden, 0 = aus)",
+          "app_link": "Link für Benachrichtigungen (optional, z. B. App oder Kurzbefehl)"
         },
         "data_description": {
           "erinnerung_tage": "1 = nur morgen, 7 = eine Woche, höchstens 21. Gilt auch für den Hinweis auf der Karte.",
           "erinnerung_ziele": "z. B. notify.mobile_app_iphone, mehrere möglich",
-          "erinnerung_vorlauf": "z. B. 3: Liegt der Bestellschluss eines offenen Tages in weniger als 3 Stunden, kommt eine eigene Nachricht. Pro Tag nur einmal."
+          "erinnerung_vorlauf": "z. B. 3: Liegt der Bestellschluss eines offenen Tages in weniger als 3 Stunden, kommt eine eigene Nachricht. Pro Tag nur einmal.",
+          "app_link": "Ersetzt in Benachrichtigungen den Link zum Bestellportal. Für eine App ohne eigenen Link: Kurzbefehl anlegen, der die App öffnet, und hier shortcuts://run-shortcut?name=Name eintragen."
         }
       }
     },

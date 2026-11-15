@@ -74,8 +74,11 @@ Die Erinnerung wird unter Einstellungen → Geräte & Dienste → Schulessen →
 | Empfänger | ein oder mehrere `notify`-Dienste |
 | Ferienkalender | optional; Tage mit Einträgen in diesem Kalender werden übersprungen |
 | Vor Bestellschluss | optional, in Stunden; z. B. 3 = eine eigene Nachricht, wenn der Bestellschluss eines offenen Tages weniger als 3 Stunden entfernt ist |
+| Link für Benachrichtigungen | optional; öffnet statt der Bestellseite z. B. die App des Anbieters (siehe unten) |
 
 Die tägliche Nachricht kommt nur, wenn im Zeitraum ein Schultag ohne Bestellung liegt und der Bestellschluss noch nicht vorbei ist. Die Nachricht vor Bestellschluss kommt pro Tag höchstens einmal. Mit der Schaltfläche „Essen-Erinnerung senden“ lässt sich das ausprobieren.
+
+Hat der Anbieter eine App ohne eigenen Link, öffnet ein Kurzbefehl sie trotzdem: In der Kurzbefehle-App einen Kurzbefehl mit der Aktion „App öffnen“ anlegen, z. B. „Essen bestellen“, und als Link `shortcuts://run-shortcut?name=Essen%20bestellen` eintragen (Leerzeichen als `%20`).
 
 Wer lieber eigene Automationen baut, nimmt `binary_sensor.<kind>_essen_offen` oder `sensor.<kind>_nachster_bestellschluss` als Auslöser.
 

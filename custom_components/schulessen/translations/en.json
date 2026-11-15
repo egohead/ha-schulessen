@@ -58,12 +58,14 @@
           "erinnerung_tage": "Period (days ahead)",
           "erinnerung_ziele": "Recipients (notify services)",
           "ferienkalender": "Holiday calendar (optional)",
-          "erinnerung_vorlauf": "Also remind before the order deadline (hours, 0 = off)"
+          "erinnerung_vorlauf": "Also remind before the order deadline (hours, 0 = off)",
+          "app_link": "Link for notifications (optional, e.g. an app or shortcut)"
         },
         "data_description": {
           "erinnerung_tage": "1 = tomorrow only, 7 = one week, at most 21. Also used for the hint on the card.",
           "erinnerung_ziele": "e.g. notify.mobile_app_iphone, several allowed",
-          "erinnerung_vorlauf": "e.g. 3: if an open day's order deadline is less than 3 hours away, a separate notification is sent. Once per day."
+          "erinnerung_vorlauf": "e.g. 3: if an open day's order deadline is less than 3 hours away, a separate notification is sent. Once per day.",
+          "app_link": "Replaces the order portal link in notifications. For an app without its own link: create a shortcut that opens the app and enter shortcuts://run-shortcut?name=Name here."
         }
       }
     },

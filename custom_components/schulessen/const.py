@@ -20,6 +20,7 @@ CONF_ERINNERUNG_ZEIT = "erinnerung_zeit"
 CONF_ERINNERUNG_TAGE = "erinnerung_tage"
 CONF_ERINNERUNG_ZIELE = "erinnerung_ziele"
 CONF_FERIENKALENDER = "ferienkalender"
+CONF_APP_LINK = "app_link"  # z. B. shortcuts://run-shortcut?name=…, für Benachrichtigungen
 CONF_VORLAUF = "erinnerung_vorlauf"  # Stunden vor Bestellschluss, 0 = aus
 STANDARD_ZEIT = "17:00:00"
 STANDARD_TAGE = 3
