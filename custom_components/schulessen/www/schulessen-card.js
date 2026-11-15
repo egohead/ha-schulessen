@@ -1,4 +1,4 @@
-/* Schulessen-Karte für Home Assistant (wird von den Schulessen-Integrationen mitgeliefert). */
+/* Schulessen-Karte für Home Assistant */
 (() => {
   const TAG = "schulessen-card";
   if (customElements.get(TAG)) return;
@@ -71,13 +71,8 @@
     if (tag.menues.some((m) => m.bestellt)) return "ok";
     return "offen";
   };
-  const STATUS = {
-    ok: ["Bestellt", "mdi:check-circle"],
-    offen: ["Nicht bestellt", "mdi:alert-circle"],
-    pause: ["Abbestellt", "mdi:minus-circle"],
-    frei: ["Feiertag", "mdi:party-popper"],
-    leer: ["Kein Speiseplan", "mdi:calendar-blank"],
-  };
+  const STATUS = { ok: "Bestellt", offen: "Nicht bestellt", pause: "Abbestellt", frei: "Feiertag", leer: "Kein Speiseplan", vorbei: "" };
+  const punkt = (k) => `<i class="dot ${k}" aria-hidden="true"></i>`;
 
   class SchulessenCard extends HTMLElement {
     constructor() {
@@ -94,7 +89,7 @@
     }
 
     setConfig(config) {
-      if (!config.entity) throw new Error("Bitte die Stand-Entität der Schulessen-Integration angeben (entity).");
+      if (!config.entity) throw new Error("entity fehlt: Stand-Sensor der Schulessen-Integration angeben");
       this._config = { variante: "voll", ...config };
       this._sig = "";
       if (this._hass) this._render();
@@ -128,7 +123,7 @@
       const b = this.shadowRoot.querySelector(".refresh");
       if (b) {
         b.classList.add("dreht");
-        setTimeout(() => b.classList.remove("dreht"), 1200);
+        setTimeout(() => b.classList.remove("dreht"), 600);
       }
     }
 
@@ -136,7 +131,7 @@
       if (!this._hass || !this._config) return;
       const st = this._hass.states[this._config.entity];
       if (!st) {
-        this.shadowRoot.innerHTML = `<ha-card><div class="leerhinweis">Entität ${esc(this._config.entity)} nicht gefunden.</div></ha-card>`;
+        this.shadowRoot.innerHTML = `<ha-card><div class="leerhinweis">Entität ${esc(this._config.entity)} nicht gefunden</div></ha-card>`;
         return;
       }
       const a = st.attributes;
@@ -168,14 +163,13 @@
         <ha-card class="${kompakt ? "kompakt" : ""}">
           <header>
             <div class="kopf">
-              <div class="kicker">Schulessen</div>
               <div class="name">${esc(titel)}</div>
               ${a.einrichtung ? `<div class="einrichtung">${esc(a.einrichtung)}</div>` : ""}
             </div>
             <div class="aktionen">
-              <span class="pille ${live ? "live" : "cache"}" title="${stand ? "Stand " + stand.toLocaleString("de-DE") : ""}">
-                <span class="punkt"></span>${live ? "Aktuell" : "Zwischenspeicher"}${
-        stand ? ` · ${String(stand.getHours()).padStart(2, "0")}:${String(stand.getMinutes()).padStart(2, "0")}` : ""
+              <span class="stand" title="${stand ? "Stand " + stand.toLocaleString("de-DE") : ""}">
+                ${punkt(live ? "live" : "cache")}${live ? "Stand" : "Zwischenspeicher"}${
+        stand ? ` ${String(stand.getHours()).padStart(2, "0")}:${String(stand.getMinutes()).padStart(2, "0")}` : ""
       }
               </span>
               <button class="refresh" title="Jetzt aktualisieren" aria-label="Aktualisieren"><ha-icon icon="mdi:refresh"></ha-icon></button>
@@ -185,7 +179,7 @@
           ${this._offenHtml(offen, a.portal, kompakt)}
           ${kompakt ? "" : this._wocheHtml(tage, heute)}
           ${kompakt ? "" : this._detailHtml(tage)}
-          ${!kompakt && a.portal ? `<footer><a class="link" href="${esc(a.portal)}" target="_blank" rel="noopener"><ha-icon icon="mdi:open-in-new"></ha-icon>Bestellportal öffnen</a></footer>` : ""}
+          ${!kompakt && a.portal ? `<footer><a class="link" href="${esc(a.portal)}" target="_blank" rel="noopener">Bestellportal öffnen<ha-icon icon="mdi:arrow-top-right"></ha-icon></a></footer>` : ""}
         </ha-card>`;
 
       this.shadowRoot.querySelector(".refresh")?.addEventListener("click", () => this._aktualisieren());
@@ -206,19 +200,17 @@
 
     _heroHtml(tag, label) {
       if (!tag) {
-        return `<section class="hero leer"><div class="label">Demnächst</div><div class="gericht">Kein Speiseplan verfügbar</div></section>`;
+        return `<section class="hero leer"><div class="label">Demnächst</div><div class="gericht">Noch kein Speiseplan</div></section>`;
       }
       const k = art(tag);
-      const [stText, stIcon] = STATUS[k];
+      const stText = STATUS[k];
       const b = (tag.menues || []).find((m) => m.bestellt);
       const schluss = parseZeit(tag.bestellschluss);
       let gericht, text, chips = "", rechts = "";
       if (k === "ok") {
         gericht = esc(b.kurz || b.name);
         text = b.kurz && b.text ? esc(b.text) : b.text && b.text !== b.name ? esc(b.text) : "";
-        chips = [`<span class="chip linie">${esc(b.name)}</span>`]
-          .concat(b.kennzeichnung ? [`<span class="chip" title="Kennzeichnung">${esc(b.kennzeichnung)}</span>`] : [])
-          .join("");
+        chips = [esc(b.name)].concat(b.kennzeichnung ? [`Kennzeichnung ${esc(b.kennzeichnung)}`] : []).join(" · ");
         rechts = b.preis !== null && b.preis !== undefined ? `<div class="preis">${preis(b.preis)}</div>` : "";
       } else if (k === "pause") {
         gericht = "Abbestellt";
@@ -229,18 +221,18 @@
       }
       return `
         <section class="hero ${k}">
-          <div class="label">${label} <span class="datum">· ${langDatum(tag.datum)}</span></div>
+          <div class="label">${label}<span class="datum"> · ${langDatum(tag.datum)}</span></div>
           <div class="zeile">
             <div class="haupt">
               <div class="gericht">${gericht}</div>
               ${text ? `<div class="beschreibung">${text}</div>` : ""}
-              ${chips ? `<div class="chips">${chips}</div>` : ""}
+              ${chips ? `<div class="meta">${chips}</div>` : ""}
             </div>
             ${rechts}
           </div>
           <div class="fuss">
-            <span class="status ${k}"><ha-icon icon="${stIcon}"></ha-icon>${stText}</span>
-            ${schluss && k === "offen" ? `<span class="frist"><ha-icon icon="mdi:timer-sand"></ha-icon>Bestellschluss ${zeitText(schluss)} · ${restZeit(schluss)}</span>` : ""}
+            <span class="status ${k}">${punkt(k)}${stText}</span>
+            ${schluss && k === "offen" ? `<span class="frist">Bestellschluss ${zeitText(schluss)}, ${restZeit(schluss)}</span>` : ""}
           </div>
         </section>`;
     }
@@ -248,13 +240,13 @@
     _offenHtml(offen, portal, kompakt) {
       if (!offen.length) {
         const sp = this._spanne === 1 ? "Morgen ist" : this._spanne ? `In den nächsten ${this._spanne} Tagen ist` : "Alle kommenden Schultage sind";
-        return kompakt ? "" : `<div class="hinweis gut"><ha-icon icon="mdi:check-decagram"></ha-icon>${this._spanne ? sp + " alles bestellt." : sp + " versorgt."}</div>`;
+        return kompakt ? "" : `<div class="hinweis gut">${punkt("ok")}${this._spanne ? sp + " alles bestellt" : sp + " bestellt"}</div>`;
       }
       const liste = offen.slice(0, kompakt ? 3 : 8).map((t) => kurzDatum(t.datum)).join(", ");
       const mehr = offen.length > (kompakt ? 3 : 8) ? ` und ${offen.length - (kompakt ? 3 : 8)} weitere` : "";
       return `
         <div class="hinweis warn">
-          <ha-icon icon="mdi:bell-ring-outline"></ha-icon>
+          ${punkt("offen")}
           <div class="hinweistext"><strong>${offen.length} ${offen.length === 1 ? "Schultag" : "Schultage"} ohne Bestellung${this._spanne ? (this._spanne === 1 ? " (morgen)" : ` (nächste ${this._spanne} Tage)`) : ""}</strong><span>${liste}${mehr}</span></div>
           ${portal ? `<a class="knopf" href="${esc(portal)}" target="_blank" rel="noopener">Bestellen</a>` : ""}
         </div>`;
@@ -275,11 +267,10 @@
         const k = iso < heute ? "vorbei" : art(t);
         const b = t && (t.menues || []).find((m) => m.bestellt);
         const inhalt =
-          k === "ok" ? esc(b.kurz || b.name) : k === "pause" ? "Abbestellt" : k === "frei" ? "Feiertag" : k === "offen" ? "Nicht bestellt" : k === "vorbei" ? "–" : "Kein Plan";
+          k === "ok" ? esc(b.kurz || b.name) : k === "pause" ? "Abbestellt" : k === "frei" ? "Feiertag" : k === "offen" ? "Nicht bestellt" : k === "vorbei" ? "" : "Kein Plan";
         zellen.push(`
           <button class="tag ${k} ${iso === heute ? "heute" : ""} ${this._auswahl === iso ? "aktiv" : ""}" data-tag="${iso}" ${t ? "" : "disabled"}>
-            <span class="wt">${WT[d.getDay()]}</span>
-            <span class="dt">${d.getDate()}.${d.getMonth() + 1}.</span>
+            <span class="tkopf"><span class="wt">${WT[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.</span>${k === "vorbei" ? "" : punkt(k)}</span>
             <span class="was">${inhalt}</span>
             ${b && b.name && (b.kurz || "") !== b.name ? `<span class="linie">${esc(b.name)}</span>` : ""}
           </button>`);
@@ -312,18 +303,18 @@
           <div class="menue ${m.bestellt ? "gewaehlt" : ""}">
             <div class="mkopf">
               <span class="mname">${esc(m.name)}</span>
-              ${m.bestellt ? `<span class="haken"><ha-icon icon="mdi:check"></ha-icon>bestellt</span>` : ""}
+              ${m.bestellt ? `<span class="haken">${punkt("ok")}bestellt</span>` : ""}
               <span class="mpreis">${preis(m.preis)}</span>
             </div>
             <div class="mtext">${esc(m.kurz && m.text ? m.text : m.text || m.kurz || "")}</div>
-            ${m.kennzeichnung ? `<div class="mkenn">Kennzeichnung: ${esc(m.kennzeichnung)}</div>` : ""}
+            ${m.kennzeichnung ? `<div class="mkenn">Kennzeichnung ${esc(m.kennzeichnung)}</div>` : ""}
           </div>`
         )
         .join("");
       return `
         <section class="detail">
           <div class="detailkopf">${langDatum(t.datum)}${
-        schluss ? `<span class="leise">Bestellschluss ${zeitText(schluss)}${schluss > new Date() ? " · " + restZeit(schluss) : ""}</span>` : ""
+        schluss ? `<span class="leise">Bestellschluss ${zeitText(schluss)}${schluss > new Date() ? ", " + restZeit(schluss) : ""}</span>` : ""
       }</div>
           ${menues || `<div class="leise">Keine Angebote</div>`}
         </section>`;
@@ -332,111 +323,108 @@
 
   const CSS = `
     :host { --se-akzent: var(--primary-color); --se-ok: var(--success-color, #2e7d32); --se-warn: var(--warning-color, #c77c02);
-            --se-leise: var(--secondary-text-color); --se-linie: var(--divider-color, rgba(127,127,127,.18));
+            --se-warn-text: color-mix(in srgb, var(--se-warn) 78%, var(--primary-text-color));
+            --se-leise: var(--secondary-text-color); --se-linie: color-mix(in srgb, var(--primary-text-color) 9%, transparent);
+            --se-flaeche: color-mix(in srgb, var(--primary-text-color) 3%, transparent);
+            --se-ease: cubic-bezier(.2, 0, 0, 1);
             --se-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif; }
-    ha-card { overflow: hidden; padding: 0;
-              background-image: radial-gradient(130% 90% at 0% 0%, color-mix(in srgb, var(--se-akzent) 13%, transparent), transparent 55%); }
-    header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:20px 22px 16px; }
-    .kicker { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--se-leise); font-weight:600; }
-    .name { font-family:var(--se-serif); font-size:26px; line-height:1.15; margin-top:4px; color:var(--primary-text-color); }
-    .einrichtung { font-size:13px; color:var(--se-leise); margin-top:3px; }
-    .aktionen { display:flex; align-items:center; gap:6px; flex-shrink:0; }
-    .pille { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:5px 10px; border-radius:999px;
-             background: color-mix(in srgb, var(--primary-text-color) 6%, transparent); color:var(--se-leise); white-space:nowrap; }
-    .punkt { width:7px; height:7px; border-radius:50%; background:var(--se-ok); box-shadow:0 0 0 3px color-mix(in srgb, var(--se-ok) 20%, transparent); }
-    .pille.cache .punkt { background:var(--se-warn); box-shadow:0 0 0 3px color-mix(in srgb, var(--se-warn) 20%, transparent); }
+    ha-card { overflow: hidden; padding: 0; }
     button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
-    .refresh { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; color:var(--se-leise); transition:background .2s; }
-    .refresh:hover { background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
-    .refresh ha-icon { --mdc-icon-size:20px; transition: transform 1.2s ease; }
-    .refresh.dreht ha-icon { transform: rotate(360deg); }
+    button:focus-visible, a:focus-visible { outline:2px solid var(--se-akzent); outline-offset:2px; }
 
-    .hero { margin:0 16px; padding:18px 20px; border-radius:18px; border:1px solid var(--se-linie);
-            background: var(--card-background-color, #fff); position:relative; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px -12px rgba(0,0,0,.12); }
-    .hero.ok { border-color: color-mix(in srgb, var(--se-ok) 35%, var(--se-linie)); }
-    .hero.offen { border-color: color-mix(in srgb, var(--se-warn) 45%, var(--se-linie)); }
-    .label { font-size:12px; letter-spacing:.12em; text-transform:uppercase; font-weight:600; color:var(--se-akzent); }
-    .label .datum { color:var(--se-leise); letter-spacing:.04em; text-transform:none; font-weight:500; }
-    .zeile { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-top:8px; }
-    .gericht { font-family:var(--se-serif); font-size:24px; line-height:1.25; color:var(--primary-text-color); }
-    .beschreibung { margin-top:6px; font-size:14px; line-height:1.5; color:var(--se-leise); }
-    .preis { font-family:var(--se-serif); font-size:20px; white-space:nowrap; color:var(--primary-text-color); }
-    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-    .chip { font-size:11.5px; padding:3px 9px; border-radius:999px; border:1px solid var(--se-linie); color:var(--se-leise); }
-    .chip.linie { color:var(--se-akzent); border-color: color-mix(in srgb, var(--se-akzent) 40%, transparent); }
-    .fuss { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px; align-items:center; }
-    .status, .frist { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; }
-    .status ha-icon, .frist ha-icon { --mdc-icon-size:18px; }
-    .status.ok { color:var(--se-ok); } .status.offen { color:var(--se-warn); } .status.pause, .status.leer, .status.frei { color:var(--se-leise); }
-    .frist { color:var(--se-leise); font-weight:500; }
+    .dot { display:inline-block; width:8px; height:8px; border-radius:50%; flex-shrink:0; box-sizing:border-box; }
+    .dot.ok, .dot.live { background:var(--se-ok); }
+    .dot.offen { border:1.5px solid var(--se-warn); }
+    .dot.cache { border:1.5px solid var(--se-leise); }
+    .dot.pause, .dot.frei, .dot.leer { background:color-mix(in srgb, var(--se-leise) 45%, transparent); }
 
-    .hinweis { display:flex; align-items:center; gap:12px; margin:12px 16px 0; padding:12px 14px; border-radius:14px; font-size:13.5px; }
-    .hinweis ha-icon { --mdc-icon-size:22px; flex-shrink:0; }
-    .hinweis.warn { background: color-mix(in srgb, var(--se-warn) 12%, transparent); color: var(--primary-text-color); }
-    .hinweis.warn ha-icon { color: var(--se-warn); }
-    .hinweis.gut { color: var(--se-leise); background: color-mix(in srgb, var(--se-ok) 7%, transparent); }
-    .hinweis.gut ha-icon { color: var(--se-ok); }
-    .hinweistext { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
-    .hinweistext span { color:var(--se-leise); }
-    .knopf { text-decoration:none; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; white-space:nowrap;
-             background: var(--se-warn); color: #fff; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 16px 12px 24px; }
+    .name { font-family:var(--se-serif); font-size:22px; line-height:1.2; color:var(--primary-text-color); }
+    .einrichtung { font-size:13px; color:var(--se-leise); margin-top:4px; }
+    .aktionen { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .stand { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--se-leise); white-space:nowrap;
+             font-variant-numeric:tabular-nums; }
+    .refresh { width:36px; height:36px; border-radius:8px; display:grid; place-items:center; color:var(--se-leise);
+               transition:background-color .15s var(--se-ease); }
+    .refresh:hover { background:var(--se-flaeche); }
+    .refresh ha-icon { --mdc-icon-size:18px; }
+    .refresh.dreht ha-icon { transform:rotate(360deg); transition:transform .6s var(--se-ease); }
 
-    .woche { margin:18px 16px 0; }
-    .wochenkopf { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .hero { margin:0 16px; padding:20px; border-radius:12px; background:var(--se-flaeche); border:1px solid var(--se-linie); }
+    .label { font-size:13px; font-weight:500; color:var(--primary-text-color); }
+    .label .datum { color:var(--se-leise); font-weight:400; }
+    .zeile { display:flex; justify-content:space-between; gap:16px; align-items:baseline; margin-top:8px; }
+    .gericht { font-family:var(--se-serif); font-size:26px; line-height:1.2; color:var(--primary-text-color); }
+    .beschreibung { margin-top:8px; font-size:14px; line-height:1.5; color:var(--se-leise); }
+    .preis { font-family:var(--se-serif); font-size:20px; white-space:nowrap; color:var(--primary-text-color); font-variant-numeric:tabular-nums; }
+    .meta { margin-top:8px; font-size:12px; color:var(--se-leise); }
+    .fuss { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:16px; align-items:center; font-size:13px; }
+    .status { display:inline-flex; align-items:center; gap:8px; font-weight:500; color:var(--primary-text-color); }
+    .status.offen { color:var(--se-warn-text); }
+    .status.pause, .status.leer, .status.frei { color:var(--se-leise); }
+    .frist { color:var(--se-leise); font-variant-numeric:tabular-nums; }
+
+    .hinweis { display:flex; align-items:center; gap:12px; margin:12px 16px 0; padding:12px 16px; border-radius:12px; font-size:14px;
+               border:1px solid var(--se-linie); }
+    .hinweis.gut { color:var(--se-leise); font-size:13px; border:0; padding:4px 20px; }
+    .hinweistext { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
+    .hinweistext strong { font-weight:500; color:var(--se-warn-text); }
+    .hinweistext span { color:var(--se-leise); font-size:13px; }
+    .knopf { text-decoration:none; font-weight:500; font-size:13px; padding:8px 16px; border-radius:8px; white-space:nowrap;
+             background:var(--primary-text-color); color:var(--card-background-color, #fff); transition:opacity .15s var(--se-ease); }
+    .knopf:hover { opacity:.85; }
+
+    .woche { margin:20px 16px 0; }
+    .wochenkopf { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
     .kw { font-family:var(--se-serif); font-size:18px; display:flex; flex-direction:column; align-items:center; line-height:1.2; }
-    .kw span { font-family: inherit; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--se-leise); font-family: var(--paper-font-body1_-_font-family, sans-serif); }
-    .nav { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; color:var(--se-leise); }
-    .nav:hover:not([disabled]) { background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
+    .kw span { font-family:var(--paper-font-body1_-_font-family, sans-serif); font-size:12px; color:var(--se-leise); margin-top:2px; }
+    .nav { width:36px; height:36px; border-radius:8px; display:grid; place-items:center; color:var(--se-leise);
+           transition:background-color .15s var(--se-ease); }
+    .nav:hover:not([disabled]) { background:var(--se-flaeche); }
     .nav[disabled] { opacity:.3; cursor:default; }
     .tage { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:8px; }
-    .tag { text-align:left; padding:10px 10px 12px; border-radius:14px; border:1px solid var(--se-linie); min-height:96px;
-           display:flex; flex-direction:column; gap:2px; transition: transform .15s, border-color .15s, background .15s; }
-    .tag:hover:not([disabled]) { transform: translateY(-1px); border-color: color-mix(in srgb, var(--se-akzent) 45%, var(--se-linie)); }
-    .tag[disabled] { cursor:default; opacity:.55; }
-    .tag .wt { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--se-leise); font-weight:600; }
-    .tag .dt { font-family:var(--se-serif); font-size:17px; }
-    .tag .was { font-size:12.5px; line-height:1.35; margin-top:4px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-    .tag .linie { font-size:11px; color:var(--se-akzent); margin-top:auto; padding-top:4px; }
-    .tag.ok { background: color-mix(in srgb, var(--se-ok) 6%, transparent); }
-    .tag.ok .was { color: var(--primary-text-color); }
-    .tag.offen { border-color: color-mix(in srgb, var(--se-warn) 50%, var(--se-linie)); background: color-mix(in srgb, var(--se-warn) 8%, transparent); }
-    .tag.offen .was { color: var(--se-warn); font-weight:600; }
-    .tag.pause .was, .tag.frei .was, .tag.leer .was, .tag.vorbei .was { color: var(--se-leise); }
-    .tag.vorbei { opacity:.5; }
-    .tag.heute { box-shadow: inset 0 0 0 1.5px var(--se-akzent); }
-    .tag.aktiv { border-color: var(--se-akzent); background: color-mix(in srgb, var(--se-akzent) 10%, transparent); }
+    .tag { text-align:left; padding:12px; border-radius:10px; border:1px solid var(--se-linie); min-height:96px;
+           display:flex; flex-direction:column; gap:4px; transition:background-color .15s var(--se-ease), border-color .15s var(--se-ease); }
+    .tag:hover:not([disabled]) { background:var(--se-flaeche); }
+    .tag[disabled] { cursor:default; }
+    .tkopf { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .tag .wt { font-size:12px; color:var(--se-leise); font-variant-numeric:tabular-nums; }
+    .tag .was { font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+                color:var(--primary-text-color); }
+    .tag .linie { font-size:12px; color:var(--se-leise); margin-top:auto; padding-top:4px; }
+    .tag.offen .was { color:var(--se-warn-text); }
+    .tag.pause .was, .tag.frei .was, .tag.leer .was { color:var(--se-leise); }
+    .tag.vorbei { opacity:.45; }
+    .tag.heute { border-color:color-mix(in srgb, var(--se-akzent) 55%, transparent); }
+    .tag.aktiv { background:var(--se-flaeche); border-color:var(--se-akzent); }
 
-    .tipp { text-align:center; font-size:12px; color:var(--se-leise); margin:12px 16px 4px; }
-    .detail { margin:14px 16px 0; padding:16px 18px; border-radius:16px; border:1px solid var(--se-linie); }
-    .detailkopf { font-family:var(--se-serif); font-size:18px; display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; margin-bottom:6px; }
-    .leise { font-size:12.5px; color:var(--se-leise); font-family: var(--paper-font-body1_-_font-family, sans-serif); }
+    .tipp { text-align:center; font-size:12px; color:var(--se-leise); margin:12px 16px 0; }
+    .detail { margin:12px 16px 0; padding:16px 20px; border-radius:12px; border:1px solid var(--se-linie); }
+    .detailkopf { font-family:var(--se-serif); font-size:18px; display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; margin-bottom:4px; }
+    .leise { font-size:13px; color:var(--se-leise); font-family:var(--paper-font-body1_-_font-family, sans-serif); font-variant-numeric:tabular-nums; }
     .menue { padding:12px 0; border-top:1px solid var(--se-linie); }
-    .menue:first-of-type { border-top:0; }
-    .mkopf { display:flex; align-items:center; gap:10px; }
-    .mname { font-size:12px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:var(--se-leise); }
-    .menue.gewaehlt .mname { color: var(--se-ok); }
-    .haken { display:inline-flex; align-items:center; gap:3px; font-size:11.5px; font-weight:600; color:var(--se-ok);
-             padding:2px 8px; border-radius:999px; background: color-mix(in srgb, var(--se-ok) 12%, transparent); }
-    .haken ha-icon { --mdc-icon-size:14px; }
-    .mpreis { margin-left:auto; font-family:var(--se-serif); font-size:15px; }
+    .detailkopf + .menue { border-top:0; }
+    .mkopf { display:flex; align-items:center; gap:12px; }
+    .mname { font-size:13px; font-weight:500; color:var(--se-leise); }
+    .menue.gewaehlt .mname { color:var(--primary-text-color); }
+    .haken { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--se-leise); }
+    .mpreis { margin-left:auto; font-family:var(--se-serif); font-size:16px; font-variant-numeric:tabular-nums; }
     .mtext { font-size:14px; line-height:1.5; margin-top:4px; }
     .mkenn { font-size:12px; color:var(--se-leise); margin-top:4px; }
 
-    footer { padding:14px 22px 18px; display:flex; justify-content:flex-end; }
-    .link { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; text-decoration:none; color:var(--se-akzent); }
+    footer { padding:16px 24px 20px; display:flex; justify-content:flex-end; }
+    .link { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:500; text-decoration:none; color:var(--se-akzent); }
     .link ha-icon { --mdc-icon-size:16px; }
-    ha-card > :last-child:not(footer) { margin-bottom:18px; }
-    ha-card.kompakt .hero { margin-bottom:0; }
-    ha-card.kompakt .gericht { font-size:21px; }
-    .leerhinweis { padding:20px; color:var(--se-leise); }
+    ha-card > :last-child:not(footer) { margin-bottom:16px; }
+    ha-card.kompakt .gericht { font-size:22px; }
+    .leerhinweis { padding:20px 24px; color:var(--se-leise); }
 
     @media (max-width: 560px) {
-      .tage { grid-template-columns: 1fr; }
-      .tag { min-height:0; flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
-      .tag .was { flex-basis:100%; -webkit-line-clamp:2; margin-top:0; }
-      .tag .linie { margin-top:0; padding-top:0; }
-      .gericht { font-size:21px; }
-      header { padding:18px 18px 14px; }
+      .tage { grid-template-columns:1fr; }
+      .tag { min-height:0; }
+      .tag .was { -webkit-line-clamp:2; }
+      .gericht { font-size:22px; }
+      header { padding:12px 12px 12px 20px; }
     }
   `;
 
@@ -446,7 +434,7 @@
     window.customCards.push({
       type: TAG,
       name: "Schulessen",
-      description: "Speiseplan, Bestellstatus und Wochenübersicht der Schulessen-Integrationen",
+      description: "Speiseplan, Bestellstatus und Wochenübersicht",
       preview: false,
     });
   }
