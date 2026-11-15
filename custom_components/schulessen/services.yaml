@@ -1,0 +1,19 @@
+kein_essen:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: schulessen
+          multiple: true
+    datum:
+      required: true
+      selector:
+        date:
+    bis:
+      selector:
+        date:
+    aktiv:
+      default: true
+      selector:
+        boolean:

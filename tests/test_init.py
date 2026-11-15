@@ -46,3 +46,25 @@ async def test_diagnose_ohne_zugangsdaten(hass, speiseplan):
 async def test_entladen(hass, speiseplan):
     entry = await _einrichten(hass, speiseplan)
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_kein_essen_noetig(hass, speiseplan):
+    from datetime import timedelta
+
+    from homeassistant.util import dt as dt_util
+
+    await _einrichten(hass, speiseplan)
+    morgen = (dt_util.now().date() + timedelta(days=1)).isoformat()
+    assert hass.states.get("binary_sensor.anna_essen_offen").state == "on"
+    await hass.services.async_call("schulessen", "kein_essen",
+                                   {"entity_id": "sensor.anna_essen_morgen", "datum": morgen}, blocking=True)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.anna_essen_morgen").state == "kein Essen nötig"
+    assert hass.states.get("binary_sensor.anna_essen_offen").state == "off"
+    tage = hass.states.get("sensor.anna_essen_stand").attributes["tage"]
+    assert next(t for t in tage if t["datum"] == morgen)["ausgenommen"] is True
+    await hass.services.async_call("schulessen", "kein_essen",
+                                   {"entity_id": "sensor.anna_essen_morgen", "datum": morgen, "aktiv": False},
+                                   blocking=True)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.anna_essen_morgen").state == "nicht bestellt"

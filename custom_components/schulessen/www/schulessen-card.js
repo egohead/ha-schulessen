@@ -12,7 +12,8 @@
       lang: (wt, d, mon) => `${wt}, ${d}. ${mon}`,
       uhr: (hm) => `${hm} Uhr`,
       locale: "de-DE",
-      status: { ok: "Bestellt", offen: "Nicht bestellt", pause: "Abbestellt", frei: "Feiertag", leer: "Kein Speiseplan" },
+      status: { ok: "Bestellt", offen: "Nicht bestellt", pause: "Abbestellt", frei: "Feiertag", leer: "Kein Speiseplan", ohne: "Kein Essen nötig" },
+      ohneText: "Für diesen Tag ist bewusst nichts bestellt.", ohneSetzen: "Kein Essen nötig", ohneAufheben: "Doch Essen bestellen",
       heute: "Heute", morgen: "Morgen", naechster: "Nächster Schultag", demnaechst: "Demnächst",
       keinPlan: "Noch kein Speiseplan", keinPlanKurz: "Kein Plan", keineVersorgung: "Für diesen Tag ist keine Versorgung vorgesehen.",
       nichtsBestellt: "Noch nichts bestellt", angebote: (n) => `${n} ${n === 1 ? "Angebot" : "Angebote"} zur Auswahl`,
@@ -35,7 +36,8 @@
       lang: (wt, d, mon) => `${wt}, ${d} ${mon}`,
       uhr: (hm) => hm,
       locale: "en-GB",
-      status: { ok: "Ordered", offen: "Not ordered", pause: "Cancelled", frei: "Holiday", leer: "No menu" },
+      status: { ok: "Ordered", offen: "Not ordered", pause: "Cancelled", frei: "Holiday", leer: "No menu", ohne: "No meal needed" },
+      ohneText: "Deliberately not ordered for this day.", ohneSetzen: "No meal needed", ohneAufheben: "Order a meal after all",
       heute: "Today", morgen: "Tomorrow", naechster: "Next school day", demnaechst: "Coming up",
       keinPlan: "No menu yet", keinPlanKurz: "No menu", keineVersorgung: "No meals are planned for this day.",
       nichtsBestellt: "Nothing ordered yet", angebote: (n) => `${n} ${n === 1 ? "option" : "options"} available`,
@@ -120,6 +122,7 @@
     if (tag.pause) return "pause";
     if (!tag.menues || !tag.menues.length) return "leer";
     if (tag.menues.some((m) => m.bestellt)) return "ok";
+    if (tag.ausgenommen) return "ohne";
     return "offen";
   };
   const punkt = (k) => `<i class="dot ${k}" aria-hidden="true"></i>`;
@@ -258,6 +261,16 @@
           this._render();
         })
       );
+      this.shadowRoot.querySelectorAll("[data-ohne]").forEach((b) =>
+        b.addEventListener("click", () => {
+          b.disabled = true;
+          this._hass.callService("schulessen", "kein_essen", {
+            entity_id: this._eid || this._config.entity,
+            datum: b.dataset.datum,
+            aktiv: b.dataset.ohne === "1",
+          });
+        })
+      );
       this.shadowRoot.querySelectorAll("[data-tag]").forEach((b) =>
         b.addEventListener("click", () => {
           this._auswahl = this._auswahl === b.dataset.tag ? null : b.dataset.tag;
@@ -280,6 +293,9 @@
         text = b.kurz && b.text ? esc(b.text) : b.text && b.text !== b.name ? esc(b.text) : "";
         chips = [esc(b.name)].concat(b.kennzeichnung ? [`${S.kennzeichnung} ${esc(b.kennzeichnung)}`] : []).join(" · ");
         rechts = b.preis !== null && b.preis !== undefined ? `<div class="preis">${preis(b.preis)}</div>` : "";
+      } else if (k === "ohne") {
+        gericht = S.status.ohne;
+        text = S.ohneText;
       } else if (k === "pause") {
         gericht = S.status.pause;
         text = tag.pause_grund ? esc(tag.pause_grund) : S.keineVersorgung;
@@ -364,6 +380,10 @@
         }</div></section>`;
       }
       const schluss = parseZeit(t.bestellschluss);
+      const umschalten =
+        (k === "offen" || k === "ohne") && (!schluss || schluss > new Date())
+          ? `<button class="umschalten" data-ohne="${k === "offen" ? 1 : 0}" data-datum="${t.datum}">${k === "offen" ? S.ohneSetzen : S.ohneAufheben}</button>`
+          : "";
       const menues = (t.menues || [])
         .map(
           (m) => `
@@ -383,7 +403,9 @@
           <div class="detailkopf">${langDatum(t.datum)}${
         schluss ? `<span class="leise">${S.bestellschluss} ${zeitText(schluss)}${schluss > new Date() ? ", " + restZeit(schluss) : ""}</span>` : ""
       }</div>
+          ${k === "ohne" ? `<div class="leise ohnehinweis">${S.ohneText}</div>` : ""}
           ${menues || `<div class="leise">${S.keineAngebote}</div>`}
+          ${umschalten ? `<div class="detailfuss">${umschalten}</div>` : ""}
         </section>`;
     }
   }
@@ -403,7 +425,7 @@
     .dot.ok, .dot.live { background:var(--se-ok); }
     .dot.offen { border:1.5px solid var(--se-warn); }
     .dot.cache { border:1.5px solid var(--se-leise); }
-    .dot.pause, .dot.frei, .dot.leer { background:color-mix(in srgb, var(--se-leise) 45%, transparent); }
+    .dot.pause, .dot.frei, .dot.leer, .dot.ohne { background:color-mix(in srgb, var(--se-leise) 45%, transparent); }
 
     header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 16px 12px 24px; }
     .name { font-family:var(--se-serif); font-size:22px; line-height:1.2; color:var(--primary-text-color); }
@@ -428,7 +450,7 @@
     .fuss { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:16px; align-items:center; font-size:13px; }
     .status { display:inline-flex; align-items:center; gap:8px; font-weight:500; color:var(--primary-text-color); }
     .status.offen { color:var(--se-warn-text); }
-    .status.pause, .status.leer, .status.frei { color:var(--se-leise); }
+    .status.pause, .status.leer, .status.frei, .status.ohne { color:var(--se-leise); }
     .frist { color:var(--se-leise); font-variant-numeric:tabular-nums; }
 
     .hinweis { display:flex; align-items:center; gap:12px; margin:12px 16px 0; padding:12px 16px; border-radius:12px; font-size:14px;
@@ -460,7 +482,7 @@
                 color:var(--primary-text-color); }
     .tag .linie { font-size:12px; color:var(--se-leise); margin-top:auto; padding-top:4px; }
     .tag.offen .was { color:var(--se-warn-text); }
-    .tag.pause .was, .tag.frei .was, .tag.leer .was { color:var(--se-leise); }
+    .tag.pause .was, .tag.frei .was, .tag.leer .was, .tag.ohne .was { color:var(--se-leise); }
     .tag.vorbei { opacity:.45; }
     .tag.heute { border-color:color-mix(in srgb, var(--se-akzent) 55%, transparent); }
     .tag.aktiv { background:var(--se-flaeche); border-color:var(--se-akzent); }
@@ -478,6 +500,12 @@
     .mpreis { margin-left:auto; font-family:var(--se-serif); font-size:16px; font-variant-numeric:tabular-nums; }
     .mtext { font-size:14px; line-height:1.5; margin-top:4px; }
     .mkenn { font-size:12px; color:var(--se-leise); margin-top:4px; }
+    .ohnehinweis { margin:4px 0 8px; }
+    .detailfuss { display:flex; justify-content:flex-end; padding-top:12px; border-top:1px solid var(--se-linie); margin-top:4px; }
+    .umschalten { font-size:13px; font-weight:500; padding:8px 16px; border-radius:8px; border:1px solid var(--se-linie);
+                  color:var(--primary-text-color); transition:background-color .15s var(--se-ease); }
+    .umschalten:hover:not([disabled]) { background:var(--se-flaeche); }
+    .umschalten[disabled] { opacity:.5; cursor:default; }
 
     footer { padding:16px 24px 20px; display:flex; justify-content:flex-end; }
     .link { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:500; text-decoration:none; color:var(--se-akzent); }

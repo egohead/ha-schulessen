@@ -73,5 +73,29 @@
       "portal_unsicher": "The order page link must start with https://.",
       "ziele_fehlen": "Choose at least one recipient for the reminder."
     }
+  },
+  "services": {
+    "kein_essen": {
+      "name": "No meal needed",
+      "description": "Marks days on which deliberately no meal is ordered (e.g. home schooling). No reminder or hint for these days.",
+      "fields": {
+        "entity_id": {
+          "name": "Child",
+          "description": "Any entity of the child"
+        },
+        "datum": {
+          "name": "Date",
+          "description": "First day"
+        },
+        "bis": {
+          "name": "Until",
+          "description": "Last day (optional)"
+        },
+        "aktiv": {
+          "name": "No meal needed",
+          "description": "Off = remove the mark again"
+        }
+      }
+    }
   }
 }

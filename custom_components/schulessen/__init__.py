@@ -7,9 +7,11 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv
+import voluptuous as vol
+
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -44,6 +46,28 @@ class SpeiseplanCoordinator(DataUpdateCoordinator):
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
         self.live = True
         self.stand = None
+        self.ausnahmen: set[str] = set()
+        self.ausnahmen_store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.ausnahmen")
+
+    async def ausnahmen_laden(self) -> None:
+        self.ausnahmen = set(await self.ausnahmen_store.async_load() or [])
+
+    def markieren(self, data):
+        """Tage ohne gewünschtes Essen kennzeichnen."""
+        for d, t in ((data or {}).get("tage") or {}).items():
+            t["ausgenommen"] = d in self.ausnahmen
+        return data
+
+    async def ausnahme_setzen(self, tage: list[str], aktiv: bool) -> None:
+        heute = dt_util.now().date().isoformat()
+        if aktiv:
+            self.ausnahmen.update(tage)
+        else:
+            self.ausnahmen.difference_update(tage)
+        self.ausnahmen = {d for d in self.ausnahmen if d >= heute}
+        await self.ausnahmen_store.async_save(sorted(self.ausnahmen))
+        self.markieren(self.data)
+        self.async_update_listeners()
 
     async def _abrufen(self):
         if self.typ == TYP_REST:
@@ -63,16 +87,52 @@ class SpeiseplanCoordinator(DataUpdateCoordinator):
                 _LOGGER.warning("Speiseplan nicht erreichbar, nutze Zwischenspeicher: %s", err)
                 self.live = False
                 self.stand = alt.get("stand")
-                return alt["data"]
+                return self.markieren(alt["data"])
             raise UpdateFailed(str(err)) from err
         self.live = True
         self.stand = dt_util.now().isoformat()
         await self.store.async_save({"stand": self.stand, "data": data})
-        return data
+        return self.markieren(data)
+
+
+SERVICE_KEIN_ESSEN = "kein_essen"
+SCHEMA_KEIN_ESSEN = vol.Schema({
+    vol.Required("entity_id"): cv.entity_ids,
+    vol.Required("datum"): cv.date,
+    vol.Optional("bis"): cv.date,
+    vol.Optional("aktiv", default=True): cv.boolean,
+})
+
+
+async def async_setup(hass: HomeAssistant, config) -> bool:
+    async def _kein_essen(call: ServiceCall) -> None:
+        reg = er.async_get(hass)
+        von, bis = call.data["datum"], call.data.get("bis") or call.data["datum"]
+        if bis < von:
+            raise ServiceValidationError("bis liegt vor datum")
+        tage, d = [], von
+        while d <= bis:
+            tage.append(d.isoformat())
+            d += timedelta(days=1)
+        eintraege = set()
+        for eid in call.data["entity_id"]:
+            e = reg.async_get(eid)
+            if e and e.platform == DOMAIN and e.config_entry_id:
+                eintraege.add(e.config_entry_id)
+        if not eintraege:
+            raise ServiceValidationError("Keine Schulessen-Entität angegeben")
+        for entry_id in eintraege:
+            entry = hass.config_entries.async_get_entry(entry_id)
+            if entry and getattr(entry, "runtime_data", None):
+                await entry.runtime_data.ausnahme_setzen(tage, call.data["aktiv"])
+
+    hass.services.async_register(DOMAIN, SERVICE_KEIN_ESSEN, _kein_essen, schema=SCHEMA_KEIN_ESSEN)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coord = SpeiseplanCoordinator(hass, entry)
+    await coord.ausnahmen_laden()
     await coord.async_config_entry_first_refresh()
     entry.runtime_data = coord
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

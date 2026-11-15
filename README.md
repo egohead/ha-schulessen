@@ -80,6 +80,8 @@ Die tägliche Nachricht kommt nur, wenn im Zeitraum ein Schultag ohne Bestellung
 
 Hat der Anbieter eine App ohne eigenen Link, öffnet ein Kurzbefehl sie trotzdem: In der Kurzbefehle-App einen Kurzbefehl mit der Aktion „App öffnen“ anlegen, z. B. „Essen bestellen“, und als Link `shortcuts://run-shortcut?name=Essen%20bestellen` eintragen (Leerzeichen als `%20`).
 
+Tage, an denen bewusst nichts bestellt wird (z. B. Homeschooling), lassen sich als „Kein Essen nötig“ markieren: auf der Karte den Tag antippen und den Knopf darunter nutzen, oder per Aktion `schulessen.kein_essen` mit Datum und optional „bis“. Für diese Tage gibt es keine Erinnerung und keinen Hinweis; die Markierung lässt sich genauso wieder aufheben.
+
 Wer lieber eigene Automationen baut, nimmt `binary_sensor.<kind>_essen_offen` oder `sensor.<kind>_nachster_bestellschluss` als Auslöser.
 
 ## Fehler melden

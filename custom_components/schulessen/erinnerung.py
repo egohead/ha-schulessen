@@ -56,7 +56,8 @@ def schluss_zeit(tag: dict) -> datetime | None:
 
 
 def ist_offen(tag: dict) -> bool:
-    return bool(tag.get("menues")) and not tag.get("feiertag") and not tag.get("zustellpause") and not tag.get("bestellt")
+    return (bool(tag.get("menues")) and not tag.get("feiertag") and not tag.get("zustellpause")
+            and not tag.get("bestellt") and not tag.get("ausgenommen"))
 
 
 def offene_tage_sync(tage: dict, bis: date | None = None) -> list[tuple[str, dict]]:

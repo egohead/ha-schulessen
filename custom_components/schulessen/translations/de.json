@@ -73,5 +73,29 @@
       "portal_unsicher": "Der Link zum Bestellportal muss mit https:// beginnen.",
       "ziele_fehlen": "Für die Erinnerung mindestens einen Empfänger wählen."
     }
+  },
+  "services": {
+    "kein_essen": {
+      "name": "Kein Essen nötig",
+      "description": "Markiert Tage, an denen bewusst kein Essen bestellt wird (z. B. Homeschooling). Für diese Tage gibt es keine Erinnerung und keinen Hinweis.",
+      "fields": {
+        "entity_id": {
+          "name": "Kind",
+          "description": "Eine beliebige Entität des Kindes"
+        },
+        "datum": {
+          "name": "Datum",
+          "description": "Erster Tag"
+        },
+        "bis": {
+          "name": "Bis",
+          "description": "Letzter Tag (optional)"
+        },
+        "aktiv": {
+          "name": "Kein Essen nötig",
+          "description": "Aus = Markierung wieder entfernen"
+        }
+      }
+    }
   }
 }

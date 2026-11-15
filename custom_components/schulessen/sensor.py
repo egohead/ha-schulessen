@@ -24,6 +24,8 @@ def _status(tag):
         return "abbestellt"
     if tag["bestellt"]:
         return tag["bestellt"]["name"]
+    if tag.get("ausgenommen"):
+        return "kein Essen nötig"
     return "nicht bestellt"
 
 
@@ -66,6 +68,7 @@ def _tage_liste(c):
             "status": _status(t),
             "feiertag": bool(t.get("feiertag")),
             "pause": bool(t.get("zustellpause")),
+            "ausgenommen": bool(t.get("ausgenommen")),
             "pause_grund": t.get("pause_grund") or None,
             "bestellschluss": t.get("bestellschluss"),
             "menues": [{"name": m.get("name"), "kurz": m.get("kurz") or None, "text": m.get("text"),
@@ -120,7 +123,7 @@ class NaechstesEssen(SpeiseplanEntity, SensorEntity):
         heute = dt_util.now().date().isoformat()
         offen = [d for d, t in sorted(tage.items())
                  if d > heute and t["menues"] and not t["feiertag"]
-                 and not t["zustellpause"] and not t["bestellt"]]
+                 and not t["zustellpause"] and not t["bestellt"] and not t.get("ausgenommen")]
         a = _attrs(self._tag(), self.coordinator)
         a["nicht_bestellt"] = offen
         a["einrichtung"] = (self.coordinator.data or {}).get("einrichtung")
