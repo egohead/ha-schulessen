@@ -113,7 +113,7 @@ async def async_dashboard_einrichten(hass: HomeAssistant, entry: ConfigEntry) ->
                 {"type": "heading", "heading": "Kalender", "heading_style": "title", "icon": "mdi:calendar-month"},
                 {"type": "calendar", "entities": [kalender], "initial_view": "listWeek"},
             ]})
-        views.append({"title": entry.title, "path": pfad, "icon": "mdi:account-school",
+        views.append({"title": entry.title, "path": pfad,
                       "type": "sections", "max_columns": 3, "sections": karten})
 
     cfg["views"] = views
