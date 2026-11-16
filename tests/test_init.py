@@ -95,3 +95,23 @@ async def test_rest_neu_anmelden_nach_abgelaufener_sitzung():
     c._post = AsyncMock(side_effect=post)
     daten = await c.fetch(date(2026, 11, 16), date(2026, 11, 20))
     assert "/login" in aufrufe and daten["tage"] == {}
+
+
+async def test_einzelne_ablehnung_ohne_neuanmeldung(hass, speiseplan):
+    """Ein kurzer Login-Fehler beim Anbieter löst keine Neuanmeldung aus, erst drei in Folge."""
+    from custom_components.schulessen.api_rest import RestAuthError
+
+    entry = await _einrichten(hass, speiseplan)
+    coord = entry.runtime_data
+    with patch("custom_components.schulessen.api_rest.RestClient.fetch", side_effect=RestAuthError("abgelehnt")):
+        await coord.async_refresh()
+        await coord.async_refresh()
+        await hass.async_block_till_done()
+        assert not any(f["context"]["source"] == "reauth" for f in hass.config_entries.flow.async_progress())
+        assert hass.states.get("sensor.anna_essen_heute").state == "Menü 1"
+        await coord.async_refresh()
+        await hass.async_block_till_done()
+        assert any(f["context"]["source"] == "reauth" for f in hass.config_entries.flow.async_progress())
+    with patch("custom_components.schulessen.api_rest.RestClient.fetch", return_value=speiseplan):
+        await coord.async_refresh()
+    assert coord.auth_fehler == 0

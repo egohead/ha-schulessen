@@ -25,6 +25,8 @@ from .const import (
 )
 from .dashboard import async_dashboard_einrichten, async_karte_registrieren
 
+AUTH_FEHLER_GRENZE = 3
+
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.BUTTON]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -46,6 +48,7 @@ class SpeiseplanCoordinator(DataUpdateCoordinator):
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
         self.live = True
         self.stand = None
+        self.auth_fehler = 0
         self.ausnahmen: set[str] = set()
         self.ausnahmen_store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.ausnahmen")
 
@@ -80,20 +83,32 @@ class SpeiseplanCoordinator(DataUpdateCoordinator):
             async with asyncio.timeout(180):
                 data = await self._abrufen()
         except (WampAuthError, RestAuthError) as err:
-            raise ConfigEntryAuthFailed(str(err)) from err
+            # Anbieter lehnen Logins gelegentlich kurz ab (Wartung, Überlast).
+            # Erst nach mehreren Fehlversuchen in Folge neu anmelden lassen.
+            self.auth_fehler += 1
+            if self.auth_fehler >= AUTH_FEHLER_GRENZE:
+                raise ConfigEntryAuthFailed(str(err)) from err
+            _LOGGER.warning(
+                "Anmeldung abgelehnt (%s/%s): %s", self.auth_fehler, AUTH_FEHLER_GRENZE, err
+            )
+            return await self._zwischenspeicher(err)
         except Exception as err:  # noqa: BLE001
-            alt = await self.store.async_load()
-            if alt:
-                _LOGGER.warning("Speiseplan nicht erreichbar, nutze Zwischenspeicher: %s", repr(err))
-                _LOGGER.debug("Fehler beim Abruf", exc_info=True)
-                self.live = False
-                self.stand = alt.get("stand")
-                return self.markieren(alt["data"])
-            raise UpdateFailed(str(err)) from err
+            return await self._zwischenspeicher(err)
+        self.auth_fehler = 0
         self.live = True
         self.stand = dt_util.now().isoformat()
         await self.store.async_save({"stand": self.stand, "data": data})
         return self.markieren(data)
+
+    async def _zwischenspeicher(self, err: Exception):
+        alt = await self.store.async_load()
+        if alt:
+            _LOGGER.warning("Speiseplan nicht erreichbar, nutze Zwischenspeicher: %s", repr(err))
+            _LOGGER.debug("Fehler beim Abruf", exc_info=True)
+            self.live = False
+            self.stand = alt.get("stand")
+            return self.markieren(alt["data"])
+        raise UpdateFailed(str(err)) from err
 
 
 SERVICE_KEIN_ESSEN = "kein_essen"
